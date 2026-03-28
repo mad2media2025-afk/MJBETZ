@@ -58,12 +58,10 @@ export default function Header({ user, balance, referralCode, referralCount, act
 
           {/* Logo */}
           <div className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-lg shadow-emerald-900/50">
-              <Trophy className="w-4.5 h-4.5 text-black" />
-            </div>
+            <img src="/logo.jpg" alt="MJ Betz Logo" className="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(255,215,0,0.3)] rounded-md" />
             <div className="leading-tight hidden sm:block">
               <div className="text-lg font-black tracking-tighter text-white">
-                IPL <span className="text-emerald-400">BET</span>
+                MJ <span className="text-emerald-400">BETZ</span>
               </div>
               <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest -mt-0.5">2026 Season</div>
             </div>
