@@ -5,7 +5,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Shield, Zap, TrendingUp } from 'lucide-react';
-import { signInWithPopup } from 'firebase/auth';
+import { useEffect } from 'react';
+import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import type { User } from '../types';
 
@@ -14,23 +15,39 @@ interface Props { onLogin: (user: User) => void; }
 export default function LoginScreen({ onLogin }: Props) {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  // Detect if user just returned from a redirect flow
+  useEffect(() => {
+    async function checkRedirect() {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          setIsLoggingIn(true);
+          // App.tsx usually handles this via onAuthStateChanged instantly,
+          // but we also trigger here just in case.
+          onLogin({
+            uid: result.user.uid,
+            name: result.user.displayName || 'Demo User',
+            email: result.user.email || '',
+            avatar: result.user.photoURL || 'DU',
+          });
+        }
+      } catch (error) {
+        console.error('Redirect sign-in error:', error);
+        alert('Sign in was cancelled or failed due to browser restrictions. Please try again.');
+        setIsLoggingIn(false);
+      }
+    }
+    checkRedirect();
+  }, [onLogin]);
+
   const handleGoogleLogin = async () => {
     setIsLoggingIn(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      // App.tsx's onAuthStateChanged will handle user doc creation
-      // (including referral code generation). Just trigger the callback.
-      onLogin({
-        uid: user.uid,
-        name: user.displayName || 'Demo User',
-        email: user.email || '',
-        avatar: user.photoURL || 'DU',
-      });
+      // Replaced Popup with Redirect specifically to support Instagram/In-App Browsers
+      await signInWithRedirect(auth, googleProvider);
     } catch (error) {
-      console.error('Google sign-in error:', error);
-      alert('Sign in failed. Please try again.');
-    } finally {
+      console.error('Google sign-in init error:', error);
+      alert('Could not open sign in form. Please use a regular browser like Chrome or Safari.');
       setIsLoggingIn(false);
     }
   };

@@ -437,16 +437,27 @@ export default function App() {
           {activeTab === 'live' && (
             <>
               <LiveMatch match={match} selectedOdds={selectedOdds} onBet={addToBetSlip} />
-              {/* Toss Betting — shown prominently on live tab */}
-              <TossBetting
-                match={match}
-                selectedOdds={selectedOdds}
-                onBet={addToBetSlip}
-                balance={balance}
-              />
-              <div className="mt-5">
-                <BettingMarkets selectedOdds={selectedOdds} onBet={addToBetSlip} status={match.status} />
-              </div>
+              {match.status === 'completed' ? (
+                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center mt-5">
+                  <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-zinc-700">
+                    <CheckCircle className="w-8 h-8 text-zinc-500" />
+                  </div>
+                  <h3 className="text-xl font-black text-white mb-2">Match Completed</h3>
+                  <p className="text-zinc-500 text-sm">All betting markets for this match are now closed and settled.</p>
+                </div>
+              ) : (
+                <>
+                  <TossBetting
+                    match={match}
+                    selectedOdds={selectedOdds}
+                    onBet={addToBetSlip}
+                    balance={balance}
+                  />
+                  <div className="mt-5">
+                    <BettingMarkets selectedOdds={selectedOdds} onBet={addToBetSlip} status={match.status} />
+                  </div>
+                </>
+              )}
             </>
           )}
 
@@ -463,13 +474,15 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Toss Betting card for upcoming match */}
-              <TossBetting
-                match={match}
-                selectedOdds={selectedOdds}
-                onBet={addToBetSlip}
-                balance={balance}
-              />
+              {/* Toss Betting card for upcoming match (only if live isn't completed) */}
+              {match.status !== 'completed' && (
+                <TossBetting
+                  match={match}
+                  selectedOdds={selectedOdds}
+                  onBet={addToBetSlip}
+                  balance={balance}
+                />
+              )}
 
               {UPCOMING.map((m, i) => (
                 <motion.div key={m.id}

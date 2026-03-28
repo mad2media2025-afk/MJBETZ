@@ -1,4 +1,14 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/cricket/:path*",
+      "destination": "https://cricket.sportmonks.com/api/v2.0/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
   "env": {
     "VITE_GOOGLE_CLIENT_ID": "1065078894672-rmp5kp8vfjns5rn9kp5psfp16g691043.apps.googleusercontent.com",
     "VITE_GOOGLE_AUTH_PROXY": "https://designarena.ai/auth/google/callback"

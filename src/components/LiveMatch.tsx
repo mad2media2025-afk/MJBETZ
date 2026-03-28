@@ -11,12 +11,16 @@ import type { LiveMatch } from '../types';
 interface OddsBtnProps {
   label: string; odds: number; selected: boolean;
   onClick: () => void;
+  disabled?: boolean;
 }
-function OddsBtn({ label, odds, selected, onClick }: OddsBtnProps) {
+function OddsBtn({ label, odds, selected, onClick, disabled }: OddsBtnProps) {
   return (
-    <motion.button whileTap={{ scale: 0.96 }} onClick={onClick}
+    <motion.button whileTap={disabled ? undefined : { scale: 0.96 }} onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       className={`flex-1 flex flex-col items-center py-4 rounded-2xl border transition-all ${
-        selected
+        disabled
+          ? 'bg-zinc-950/50 border-zinc-800 opacity-50 cursor-not-allowed'
+          : selected
           ? 'bg-emerald-500/15 border-emerald-500 shadow-[0_0_18px_rgba(16,185,129,0.2)]'
           : 'bg-zinc-900 border-zinc-800 hover:border-emerald-500/50'
       }`}
@@ -406,11 +410,13 @@ export default function LiveMatchHero({ match, selectedOdds, onBet }: Props) {
             label={`${match.team1Short} Wins`} odds={parseFloat((match.team1WinProb / 25).toFixed(2))}
             selected={selectedOdds['match-winner'] === `${match.team1Short} Win`}
             onClick={() => onBet('match-winner', `${match.team1Short} Win`, parseFloat((match.team1WinProb / 25).toFixed(2)))}
+            disabled={match.status === 'completed'}
           />
           <OddsBtn
             label={`${match.team2Short} Wins`} odds={parseFloat((match.team2WinProb / 25).toFixed(2))}
             selected={selectedOdds['match-winner'] === `${match.team2Short} Win`}
             onClick={() => onBet('match-winner', `${match.team2Short} Win`, parseFloat((match.team2WinProb / 25).toFixed(2)))}
+            disabled={match.status === 'completed'}
           />
         </div>
       </div>
