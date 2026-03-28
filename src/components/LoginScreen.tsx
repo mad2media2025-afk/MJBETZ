@@ -2,10 +2,10 @@
  * LoginScreen.tsx — Google Sign-In gate
  * Must authenticate before accessing betting features
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Shield, Zap, TrendingUp } from 'lucide-react';
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import type { User } from '../types';
 
@@ -14,70 +14,37 @@ interface Props { onLogin: (user: User) => void; }
 export default function LoginScreen({ onLogin }: Props) {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Detect if user just returned from a redirect flow
-  useEffect(() => {
-    async function checkRedirect() {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          setIsLoggingIn(true);
-          onLogin({
-            uid: result.user.uid,
-            name: result.user.displayName || 'Demo User',
-            email: result.user.email || '',
-            avatar: result.user.photoURL || 'DU',
-          });
-        }
-      } catch (error) {
-        console.error('Redirect sign-in error:', error);
-        alert('Welcome back! Please try signing in again.');
-        setIsLoggingIn(false);
-      }
-    }
-    checkRedirect();
-  }, [onLogin]);
-
   const handleGoogleLogin = async () => {
     setIsLoggingIn(true);
     
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
     try {
-      if (isMobile) {
-        // Mobile browsers (Instagram/Facebook WebView, iOS Safari) strictly prefer Redirect
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        // Desktop browsers (Brave, Chrome) strictly prefer Popup 
-        // because Brave blocks the 3rd-party cookies required by Redirect
-        const result = await signInWithPopup(auth, googleProvider);
-        onLogin({
-          uid: result.user.uid,
-          name: result.user.displayName || 'Demo User',
-          email: result.user.email || '',
-          avatar: result.user.photoURL || 'DU',
-        });
-      }
-    } catch (error: any) {
-      console.error('Primary login method failed:', error);
+      // Strictly use Popup. It is the most reliable method for modern browsers 
+      // without triggering 3rd-party Storage Partitioning errors.
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
       
-      // Fallback: If primary fails, silently try the other method
-      try {
-        console.log('Attempting fallback login method...');
-        if (isMobile) {
-          const result = await signInWithPopup(auth, googleProvider);
-          onLogin({
-            uid: result.user.uid,
-            name: result.user.displayName || 'Demo User',
-            email: result.user.email || '',
-            avatar: result.user.photoURL || 'DU',
-          });
-        } else {
-          await signInWithRedirect(auth, googleProvider);
-        }
-      } catch (fallbackError) {
-        console.error('Fallback login also failed:', fallbackError);
-        alert('Login is being blocked by your browser. If you are using Brave, please turn off Shields. Otherwise, please allow pop-ups for this site.');
-        setIsLoggingIn(false);
+      onLogin({
+        uid: user.uid,
+        name: user.displayName || 'Demo User',
+        email: user.email || '',
+        avatar: user.photoURL || 'DU',
+      });
+    } catch (popupError: any) {
+      console.error('Popup sign-in failed/blocked:', popupError);
+      setIsLoggingIn(false);
+
+      // Distinguish between user closing the popup vs Browser/Instagram blocking it
+      if (popupError.code === 'auth/popup-closed-by-user') {
+        // User just closed it manually, do nothing
+        return;
+      }
+      
+      // If the popup was blocked entirely (very common in Instagram/Facebook WebViews)
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        alert("🔒 Secure Login Blocked!\n\nYou are using an App Browser (like Instagram/Facebook).\n\nPlease tap the 3 dots (⋮) in the top right and select 'Open in System Browser' or 'Open in Chrome/Safari' to login securely.");
+      } else {
+        alert("🔒 Popup Blocked\n\nPlease allow pop-ups for this website or turn off Shields/Adblockers to sign in with Google.");
       }
     }
   };
