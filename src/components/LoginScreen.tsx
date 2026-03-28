@@ -2,11 +2,10 @@
  * LoginScreen.tsx — Google Sign-In gate
  * Must authenticate before accessing betting features
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Shield, Zap, TrendingUp } from 'lucide-react';
-import { useEffect } from 'react';
-import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import type { User } from '../types';
 
@@ -22,8 +21,6 @@ export default function LoginScreen({ onLogin }: Props) {
         const result = await getRedirectResult(auth);
         if (result) {
           setIsLoggingIn(true);
-          // App.tsx usually handles this via onAuthStateChanged instantly,
-          // but we also trigger here just in case.
           onLogin({
             uid: result.user.uid,
             name: result.user.displayName || 'Demo User',
@@ -33,7 +30,7 @@ export default function LoginScreen({ onLogin }: Props) {
         }
       } catch (error) {
         console.error('Redirect sign-in error:', error);
-        alert('Sign in was cancelled or failed due to browser restrictions. Please try again.');
+        alert('Welcome back! Please try signing in again.');
         setIsLoggingIn(false);
       }
     }
@@ -43,12 +40,28 @@ export default function LoginScreen({ onLogin }: Props) {
   const handleGoogleLogin = async () => {
     setIsLoggingIn(true);
     try {
-      // Replaced Popup with Redirect specifically to support Instagram/In-App Browsers
-      await signInWithRedirect(auth, googleProvider);
-    } catch (error) {
-      console.error('Google sign-in init error:', error);
-      alert('Could not open sign in form. Please use a regular browser like Chrome or Safari.');
-      setIsLoggingIn(false);
+      // Step 1: Try the standard popup. This works perfectly on Chrome, Brave, Safari, and Desktop.
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      onLogin({
+        uid: user.uid,
+        name: user.displayName || 'Demo User',
+        email: user.email || '',
+        avatar: user.photoURL || 'DU',
+      });
+    } catch (popupError: any) {
+      console.error('Popup sign-in failed/blocked:', popupError);
+      
+      // Step 2: If we are in an In-App Browser (Instagram, Facebook) or the popup is blocked,
+      // we immediately fall back to the redirect method.
+      try {
+        console.log('Falling back to redirect login...');
+        await signInWithRedirect(auth, googleProvider);
+      } catch (redirectError) {
+        console.error('Fallback redirect also failed:', redirectError);
+        alert('Sign in blocked by your browser (likely Brave Shields or Private Mode). Please try Chrome or Safari.');
+        setIsLoggingIn(false);
+      }
     }
   };
 
