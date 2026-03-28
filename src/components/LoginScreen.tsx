@@ -39,27 +39,44 @@ export default function LoginScreen({ onLogin }: Props) {
 
   const handleGoogleLogin = async () => {
     setIsLoggingIn(true);
+    
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     try {
-      // Step 1: Try the standard popup. This works perfectly on Chrome, Brave, Safari, and Desktop.
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      onLogin({
-        uid: user.uid,
-        name: user.displayName || 'Demo User',
-        email: user.email || '',
-        avatar: user.photoURL || 'DU',
-      });
-    } catch (popupError: any) {
-      console.error('Popup sign-in failed/blocked:', popupError);
-      
-      // Step 2: If we are in an In-App Browser (Instagram, Facebook) or the popup is blocked,
-      // we immediately fall back to the redirect method.
-      try {
-        console.log('Falling back to redirect login...');
+      if (isMobile) {
+        // Mobile browsers (Instagram/Facebook WebView, iOS Safari) strictly prefer Redirect
         await signInWithRedirect(auth, googleProvider);
-      } catch (redirectError) {
-        console.error('Fallback redirect also failed:', redirectError);
-        alert('Sign in blocked by your browser (likely Brave Shields or Private Mode). Please try Chrome or Safari.');
+      } else {
+        // Desktop browsers (Brave, Chrome) strictly prefer Popup 
+        // because Brave blocks the 3rd-party cookies required by Redirect
+        const result = await signInWithPopup(auth, googleProvider);
+        onLogin({
+          uid: result.user.uid,
+          name: result.user.displayName || 'Demo User',
+          email: result.user.email || '',
+          avatar: result.user.photoURL || 'DU',
+        });
+      }
+    } catch (error: any) {
+      console.error('Primary login method failed:', error);
+      
+      // Fallback: If primary fails, silently try the other method
+      try {
+        console.log('Attempting fallback login method...');
+        if (isMobile) {
+          const result = await signInWithPopup(auth, googleProvider);
+          onLogin({
+            uid: result.user.uid,
+            name: result.user.displayName || 'Demo User',
+            email: result.user.email || '',
+            avatar: result.user.photoURL || 'DU',
+          });
+        } else {
+          await signInWithRedirect(auth, googleProvider);
+        }
+      } catch (fallbackError) {
+        console.error('Fallback login also failed:', fallbackError);
+        alert('Login is being blocked by your browser. If you are using Brave, please turn off Shields. Otherwise, please allow pop-ups for this site.');
         setIsLoggingIn(false);
       }
     }
