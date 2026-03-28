@@ -195,30 +195,42 @@ function ReferralContent({
         <X className="w-4 h-4" />
       </button>
 
-      {/* Banner */}
-      <div className="relative bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-700 px-6 pt-6 pb-8 text-center overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
-        <div className="absolute -bottom-6 -left-6 w-28 h-28 rounded-full bg-white/5" />
-        <motion.div
-          animate={{ scale: [1, 1.08, 1], rotate: [0, -5, 5, 0] }}
-          transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}
-          className="inline-flex items-center justify-center w-14 h-14 bg-yellow-400 rounded-2xl shadow-xl mb-3"
-        >
-          <Gift className="w-7 h-7 text-yellow-900" />
-        </motion.div>
-        <h2 className="text-2xl font-black text-white leading-none">Refer & Earn</h2>
-        <p className="text-purple-200 text-xs font-bold mt-1">Everyone wins when you share MJBET!</p>
+      {/* Banner — cricket players background */}
+      <div className="relative px-6 pt-6 pb-8 text-center overflow-hidden min-h-[220px] flex flex-col items-center justify-end">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/referral-bg.jpg')" }}
+        />
+        {/* Dark gradient overlay — bottom-heavy so content is readable */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+        {/* Purple tint overlay for brand colour */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/50 to-indigo-900/30" />
 
-        {/* Reward pills */}
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <div className="bg-yellow-400 text-yellow-900 font-black text-sm px-4 py-1.5 rounded-xl shadow">
-            You get ₹1,000
+        {/* Content — sits above overlays */}
+        <div className="relative z-10 w-full">
+          <motion.div
+            animate={{ scale: [1, 1.08, 1], rotate: [0, -5, 5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}
+            className="inline-flex items-center justify-center w-14 h-14 bg-yellow-400 rounded-2xl shadow-2xl mb-3 shadow-yellow-500/30"
+          >
+            <Gift className="w-7 h-7 text-yellow-900" />
+          </motion.div>
+
+          <h2 className="text-2xl font-black text-white leading-none drop-shadow-lg">Refer & Earn</h2>
+          <p className="text-purple-200 text-xs font-bold mt-1 drop-shadow">Everyone wins when you share MJBET!</p>
+
+          {/* Reward pills */}
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <div className="bg-yellow-400 text-yellow-900 font-black text-sm px-4 py-1.5 rounded-xl shadow-lg shadow-yellow-500/30">
+              You get ₹1,000
+            </div>
+            <div className="bg-white/25 backdrop-blur-sm text-white font-black text-sm px-4 py-1.5 rounded-xl border border-white/20">
+              Friend gets ₹100
+            </div>
           </div>
-          <div className="bg-white/20 text-white font-black text-sm px-4 py-1.5 rounded-xl">
-            Friend gets ₹100
-          </div>
+          <p className="text-purple-200/80 text-[11px] mt-2 drop-shadow">when your friend deposits ₹250+</p>
         </div>
-        <p className="text-purple-300 text-[11px] mt-2">when your friend deposits ₹250+</p>
       </div>
 
       <div className="px-5 py-4 space-y-3">

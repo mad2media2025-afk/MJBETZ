@@ -29,9 +29,22 @@ export interface LiveMatch {
   team1WinProb: number;
   team2WinProb: number;
   lastOverRuns: (number | string)[];
-  batsmen: { name: string; runs: number; balls: number; fours: number; sixes: number }[];
-  bowler: { name: string; overs: string; wickets: number; economy: number };
+  batsmen: { name: string; runs: number; balls: number; fours: number; sixes: number; strikeRate?: number; isStriker?: boolean }[];
+  bowler: { name: string; overs: string; wickets: number; economy: number; runsConceded?: number; maidens?: number };
   lastBall: string;
+  // New fields for full live integration
+  fixtureId?: number;
+  currentInnings?: number;         // 1 or 2
+  battingTeamId?: number;          // which team is batting
+  score2?: number;                 // 2nd innings score (or 1st innings final when chasing)
+  wickets2?: number;
+  overs2?: number;
+  matchNote?: string;              // e.g. "CSK need 45 runs in 30 balls"
+  team1Id?: number;
+  team2Id?: number;
+  allBatsmen?: { name: string; runs: number; balls: number; fours: number; sixes: number; strikeRate?: number; howOut?: string; isActive?: boolean }[];
+  allBowlers?: { name: string; overs: string; wickets: number; economy: number; runsConceded?: number; maidens?: number; isActive?: boolean }[];
+  isLiveFromApi?: boolean;         // true when data is from real API (not simulation)
 }
 
 export interface BetSlipItem {

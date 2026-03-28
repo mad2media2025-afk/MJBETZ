@@ -20,6 +20,7 @@ import BetSlip from './components/BetSlip';
 import LiveMatch from './components/LiveMatch';
 import BettingMarkets from './components/BettingMarkets';
 import AdminDashboard from './components/AdminDashboard';
+import TossBetting from './components/TossBetting';
 import ReferralPopup from './components/ReferralPopup';
 import ReferralCodeEntry from './components/ReferralCodeEntry';
 import { fetchLiveMatchData } from './lib/cricketApi';
@@ -29,20 +30,20 @@ import type { User, LiveMatch as LiveMatchType, BetSlipItem, PlacedBet } from '.
 // ─── Match data ───────────────────────────────────────────────────────────────
 
 const INIT_MATCH: LiveMatchType = {
-  status: 'pre-match',
-  startTime: '2026-03-28T14:00:00Z',
-  team1: 'Royal Challengers Bengaluru', team2: 'Sunrisers Hyderabad',
-  team1Short: 'RCB', team2Short: 'SRH',
-  team1Color: '#EC1C24', team2Color: '#F26522',
-  score1: 0, wickets1: 0, overs: 0, totalOvers: 20, target: 0,
-  crr: 0, rrr: 0, team1WinProb: 50, team2WinProb: 50,
-  lastOverRuns: [],
+  status: 'live',                         // ← Match is LIVE now
+  startTime: '2026-03-28T13:30:00Z',      // ← Backdated
+  team1: 'Sunrisers Hyderabad', team2: 'Royal Challengers Bengaluru',
+  team1Short: 'SRH', team2Short: 'RCB',
+  team1Color: '#F26522', team2Color: '#EC1C24',
+  score1: 7, wickets1: 0, overs: 1.0, totalOvers: 20, target: 0,
+  crr: 7.0, rrr: 0, team1WinProb: 43, team2WinProb: 57,
+  lastOverRuns: [0, 1, 0, 6, 0, 0],
   batsmen: [
-    { name: 'Virat Kohli', runs: 0, balls: 0, fours: 0, sixes: 0 },
-    { name: 'Faf du Plessis', runs: 0, balls: 0, fours: 0, sixes: 0 },
+    { name: 'Abhishek Sharma', runs: 6, balls: 4, fours: 0, sixes: 1 },
+    { name: 'Travis Head *', runs: 1, balls: 2, fours: 0, sixes: 0 },
   ],
-  bowler: { name: 'Bhuvneshwar Kumar', overs: '0', wickets: 0, economy: 0 },
-  lastBall: '',
+  bowler: { name: 'Jacob Duffy *', overs: '1.0', wickets: 0, economy: 7.0 },
+  lastBall: '0',
 };
 
 const UPCOMING = [
@@ -233,7 +234,7 @@ export default function App() {
       }
     };
 
-    liveTimer.current = setInterval(fetchLive, 8000);
+    liveTimer.current = setInterval(fetchLive, 5000);
     return () => { if (liveTimer.current) clearInterval(liveTimer.current); };
   }, [user, showToast]);
 
@@ -436,6 +437,13 @@ export default function App() {
           {activeTab === 'live' && (
             <>
               <LiveMatch match={match} selectedOdds={selectedOdds} onBet={addToBetSlip} />
+              {/* Toss Betting — shown prominently on live tab */}
+              <TossBetting
+                match={match}
+                selectedOdds={selectedOdds}
+                onBet={addToBetSlip}
+                balance={balance}
+              />
               <div className="mt-5">
                 <BettingMarkets selectedOdds={selectedOdds} onBet={addToBetSlip} status={match.status} />
               </div>
@@ -454,6 +462,14 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* Toss Betting card for upcoming match */}
+              <TossBetting
+                match={match}
+                selectedOdds={selectedOdds}
+                onBet={addToBetSlip}
+                balance={balance}
+              />
 
               {UPCOMING.map((m, i) => (
                 <motion.div key={m.id}

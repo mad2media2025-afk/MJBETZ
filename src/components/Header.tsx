@@ -52,7 +52,7 @@ export default function Header({ user, balance, referralCode, referralCount, act
       </div>
 
       {/* Main header */}
-      <header className="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/60 w-full overflow-hidden">
+      <header className="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/60 w-full">
         {/* UPDATED: Reduced padding and gap for mobile */}
         <div className="max-w-[1400px] w-full mx-auto px-2 sm:px-4 h-[62px] flex items-center justify-between gap-1 sm:gap-4">
 
@@ -146,7 +146,7 @@ export default function Header({ user, balance, referralCode, referralCount, act
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2.5 w-56 bg-zinc-900 border border-zinc-800 rounded-2xl py-1.5 shadow-2xl shadow-black/50 z-50 overflow-hidden"
+                    className="absolute right-0 top-full mt-2.5 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl py-1.5 shadow-2xl shadow-black/60 z-[200] overflow-hidden"
                   >
                     {/* User info */}
                     <div className="px-4 py-3 border-b border-zinc-800/60">

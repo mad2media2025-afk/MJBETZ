@@ -10,5 +10,17 @@ export default defineConfig(async () => {
     const m = await import('./.vite-source-tags.js');
     plugins.push(m.sourceTags());
   } catch {}
-  return { plugins };
+  return {
+    plugins,
+    server: {
+      proxy: {
+        '/api/cricket': {
+          target: 'https://cricket.sportmonks.com',
+          changeOrigin: true,
+          rewrite: (path: string) => path.replace(/^\/api\/cricket/, '/api/v2.0'),
+          secure: true,
+        },
+      },
+    },
+  };
 })
