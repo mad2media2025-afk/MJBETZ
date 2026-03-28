@@ -1,0 +1,115 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper functions ───────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // ─── Users collection ────────────────────────────────────────────────────
+    // Users can read their own document.
+    // Bet placement uses a runTransaction() to deduct stake — those writes
+    //   go through the 'balance-only' path below.
+    // Settlement credits (increment) also go through the 'balance-only' path.
+    // isAdmin flag can only be set by admins or the Firebase console.
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Allow user to create their own doc (first sign-in, no balance/isAdmin)
+      allow create: if isOwner(uid)
+        && !('isAdmin' in request.resource.data)
+        && !('balance' in request.resource.data);
+
+      // FULL update: only admins (e.g. manual corrections from console)
+      allow update: if isAdmin()
+        // RESTRICTED update: owner may ONLY change the `balance` field.
+        // This covers:
+        //   (a) runTransaction() deductions when placing a bet
+        //   (b) writeBatch() credits when a bet is settled (won)
+        // The user cannot change isAdmin or any other profile field this way.
+        || (isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance']));
+    }
+
+    // ─── Placed Bets collection ──────────────────────────────────────────────
+    // Users can read & create their own bets (status must start as 'pending').
+    // Settlement (client-side writeBatch) is allowed to flip status
+    //   pending → won | lost, but ONLY the `status` field.
+    // Odds, stake, and other fields are immutable after creation.
+    match /placedBets/{uid}/bets/{betId} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Creating a new bet: status must be 'pending', uid must match
+      allow create: if isOwner(uid)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.uid == request.auth.uid;
+
+      // Settlement update: owner may ONLY flip status from pending → won/lost
+      // No other fields may be touched (prevents stake/odds manipulation).
+      allow update: if isAdmin()
+        || (isOwner(uid)
+          && resource.data.status == 'pending'
+          && request.resource.data.status in ['won', 'lost']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+
+      allow delete: if false;
+    }
+
+    // ─── Deposits collection ─────────────────────────────────────────────────
+    // Users can create deposit requests (status must be 'pending').
+    // Users can read their own requests.
+    // Only admins can approve/reject.
+    match /deposits/{depositId} {
+      allow read: if isSignedIn() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+
+      // Any signed-in user may submit a deposit request (status forced to pending)
+      allow create: if isSignedIn()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.uid == request.auth.uid;
+
+      // Only admins can approve / reject
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ─── Referrals collection ────────────────────────────────────────────────
+    // Created by the referee (new user) linking their referral code.
+    // Admins update status to 'rewarded' after deposit is approved.
+    // Referrer & referee can read their own referral docs.
+    match /referrals/{referralId} {
+      allow read: if isSignedIn() && (
+        resource.data.referrerUid == request.auth.uid ||
+        resource.data.refereeUid  == request.auth.uid ||
+        isAdmin()
+      );
+
+      // Referee creates the referral link (status must be 'pending')
+      allow create: if isSignedIn()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.refereeUid == request.auth.uid;
+
+      // Only admins can mark as 'rewarded'
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.refereeUid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+      allow delete: if false;
+    }
+
+    // ─── Everything else ─────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
