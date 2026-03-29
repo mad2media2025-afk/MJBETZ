@@ -20,7 +20,7 @@ import BetSlip from './components/BetSlip';
 import LiveMatch from './components/LiveMatch';
 import BettingMarkets from './components/BettingMarkets';
 import AdminDashboard from './components/AdminDashboard';
-import TossBetting from './components/TossBetting';
+// import TossBetting from './components/TossBetting';
 import ReferralPopup from './components/ReferralPopup';
 import MyNetworks from './components/MyNetworks';
 import { fetchLiveMatchData } from './lib/cricketApi';
@@ -455,12 +455,12 @@ export default function App() {
                 </div>
               ) : (
                 <>
-                  <TossBetting
+                  {/* <TossBetting
                     match={match}
                     selectedOdds={selectedOdds}
                     onBet={addToBetSlip}
                     balance={balance}
-                  />
+                  /> */}
                   <div className="mt-5">
                     <BettingMarkets selectedOdds={selectedOdds} onBet={addToBetSlip} status={match.status} />
                   </div>
@@ -483,14 +483,14 @@ export default function App() {
               </div>
 
               {/* Toss Betting card for upcoming match (only if live isn't completed) */}
-              {match.status !== 'completed' && (
+              {/* {match.status !== 'completed' && (
                 <TossBetting
                   match={match}
                   selectedOdds={selectedOdds}
                   onBet={addToBetSlip}
                   balance={balance}
                 />
-              )}
+              )} */}
 
               {UPCOMING.map((m, i) => (
                 <motion.div key={m.id}
