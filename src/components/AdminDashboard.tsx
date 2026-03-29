@@ -368,7 +368,9 @@ export default function AdminDashboard({ user }: Props) {
                                 <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-zinc-700">{b.market}</span>
                                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-widest ${b.status === 'pending' ? 'border-purple-500/30 text-purple-400' : b.status === 'won' ? 'border-emerald-500/30 text-emerald-400' : b.status === 'lost' ? 'border-red-500/30 text-red-500' : 'border-blue-500/30 text-blue-400'}`}>{b.status}</span>
                               </div>
-                              <p className="text-xs text-zinc-400 mb-2 truncate max-w-sm">{b.matchLabel}</p>
+                              <p className="text-xs text-zinc-400 mb-2 truncate max-w-sm">
+                                {b.matchLabel} <span className="mx-2 opacity-30">•</span> {new Date(b.timestamp).toLocaleString()}
+                              </p>
                               
                               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
                                 <span className="text-zinc-300 bg-zinc-800/50 px-2 py-1 rounded-md border border-zinc-700/50">
