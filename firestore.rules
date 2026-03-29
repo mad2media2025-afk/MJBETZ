@@ -99,6 +99,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ─── Global placed bets (`collectionGroup('bets')` access for Admin) ───
+    match /{path=**}/bets/{betId} {
+      allow read, update: if isAdmin();
+    }
+
     // ─── Everything else ─────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

@@ -8,6 +8,9 @@ export interface User {
   referralCode?: string; // unique code for this user
   referralCount?: number; // number of friends who deposited ₹250+ via their code
   referredBy?: string;   // uid of the user who referred them
+  balance?: number;      // user's wallet balance
+  isAdmin?: boolean;     // admin flag
+  createdAt?: number | string; // account creation timestamp
 }
 
 export interface LiveMatch {
@@ -61,7 +64,7 @@ export interface PlacedBet {
   label: string;
   odds: number;
   stake: number;
-  status: 'won' | 'lost' | 'pending';
+  status: 'won' | 'lost' | 'pending' | 'refunded';
   timestamp: number;
   // Firestore extensions
   matchId?: string;
