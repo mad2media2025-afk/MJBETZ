@@ -190,6 +190,12 @@ export default function Header({ user, balance, referralCode, referralCount, act
                     {/* Actions */}
                     <div className="py-1">
                       <button
+                        onClick={() => { setMenuOpen(false); window.open('/my-networks', '_blank'); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:text-blue-400 hover:bg-zinc-800/60 transition"
+                      >
+                        <Users className="w-4 h-4 text-blue-400" /> My Networks
+                      </button>
+                      <button
                         onClick={() => { setMenuOpen(false); onDeposit(); }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:text-emerald-400 hover:bg-zinc-800/60 transition"
                       >

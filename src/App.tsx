@@ -9,7 +9,7 @@ import { CheckCircle, Target, Clock } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import {
   doc, onSnapshot, collection, addDoc,
-  query, orderBy, runTransaction, getDoc, setDoc, updateDoc,
+  query, orderBy, runTransaction, getDoc, updateDoc,
 } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
 import Header from './components/Header';
@@ -22,7 +22,7 @@ import BettingMarkets from './components/BettingMarkets';
 import AdminDashboard from './components/AdminDashboard';
 import TossBetting from './components/TossBetting';
 import ReferralPopup from './components/ReferralPopup';
-import ReferralCodeEntry from './components/ReferralCodeEntry';
+import MyNetworks from './components/MyNetworks';
 import { fetchLiveMatchData } from './lib/cricketApi';
 import { settlePendingBets } from './lib/settleBets';
 import type { User, LiveMatch as LiveMatchType, BetSlipItem, PlacedBet } from './types';
@@ -77,7 +77,6 @@ export default function App() {
   const [referralCode, setReferralCode] = useState<string>('');
   const [referralCount, setReferralCount] = useState<number>(0);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
-  const [showReferralEntry, setShowReferralEntry] = useState(false);
 
   // Match & UI
   const [match, setMatch] = useState<LiveMatchType>(INIT_MATCH);
@@ -108,34 +107,29 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const code = generateReferralCode(firebaseUser.uid);
+        const userRef = doc(db, 'users', firebaseUser.uid);
+
+        // Read Firestore doc first — source of truth for name/email
+        const snap = await getDoc(userRef);
+        const firestoreData = snap.exists() ? snap.data() : null;
+
         const u: User = {
           uid: firebaseUser.uid,
-          name: firebaseUser.displayName || 'User',
-          email: firebaseUser.email || '',
-          avatar: firebaseUser.photoURL || 'U',
-          referralCode: code,
+          name: firestoreData?.name || firebaseUser.displayName || 'User',
+          email: firestoreData?.email || firebaseUser.email || '',
+          avatar: firebaseUser.photoURL || '',
+          referralCode: firestoreData?.referralCode || code,
         };
         setUser(u);
-        setReferralCode(code);
+        setReferralCode(firestoreData?.referralCode || code);
         localStorage.setItem('mjb_user', JSON.stringify(u));
 
-        // Ensure user doc exists + has referralCode persisted
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        const snap = await getDoc(userRef);
         if (!snap.exists()) {
-          // Brand new user — persist referral code, show code-entry dialog
-          await setDoc(userRef, {
-            name: firebaseUser.displayName || 'User',
-            email: firebaseUser.email || '',
-            avatar: firebaseUser.photoURL || 'U',
-            balance: 0,
-            referralCode: code,
-            referralCount: 0,
-            createdAt: new Date().toISOString(),
-          });
-          setShowReferralEntry(true);
-        } else if (!snap.data().referralCode) {
-          // Existing user missing code (migration) — write it
+          // Doc not yet created — LoginScreen creates it during signup.
+          // onSnapshot listener (below) will fire automatically once it's written.
+          // Do NOT create here to avoid race-condition overwriting referral bonus credits.
+        } else if (!firestoreData?.referralCode) {
+          // Migration: existing user missing referralCode field
           await updateDoc(userRef, { referralCode: code });
         }
       } else {
@@ -353,6 +347,20 @@ export default function App() {
     );
   }
 
+  // My Networks routing (opens in new tab)
+  if (window.location.pathname === '/my-networks') {
+    return (
+      <div className="min-h-screen bg-zinc-950 font-sans text-white">
+        <MyNetworks
+          user={user}
+          balance={balance}
+          referralCode={referralCode}
+          referralCount={referralCount}
+        />
+      </div>
+    );
+  }
+
   return (
     // ADDED: overflow-x-hidden to root to fix horizontal scroll bleed
     <div className="min-h-screen bg-zinc-950 text-white font-sans overflow-x-hidden w-full">
@@ -411,15 +419,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* ── Referral code entry (shown to new users) ── */}
-      <AnimatePresence>
-        {showReferralEntry && user && (
-          <ReferralCodeEntry
-            uid={user.uid}
-            onClose={() => setShowReferralEntry(false)}
-          />
-        )}
-      </AnimatePresence>
+
 
       {/* ── Withdraw popup ── */}
       <AnimatePresence>

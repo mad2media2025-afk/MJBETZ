@@ -22,6 +22,8 @@ export default function WithdrawPopup({ user, balance, onClose }: Props) {
   const [upiTouched, setUpiTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  // Show wagering notice first — user must acknowledge before accessing the form
+  const [showWagerNotice, setShowWagerNotice] = useState(true);
 
   const amountControls = useAnimation();
   const upiControls = useAnimation();
@@ -69,7 +71,38 @@ export default function WithdrawPopup({ user, balance, onClose }: Props) {
         transition={{ type: 'spring', damping: 22, stiffness: 300 }}
         className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden relative"
       >
-        {success ? (
+        {/* ── Wager Notice Screen (shown first) ── */}
+        {showWagerNotice ? (
+          <div className="p-8 flex flex-col items-center text-center">
+            <button onClick={onClose} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition">
+              <X className="w-4 h-4" />
+            </button>
+            <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mb-5 border border-yellow-500/20">
+              <span className="text-4xl">⚠️</span>
+            </div>
+            <h3 className="text-xl font-black text-white mb-3">Wager Requirement</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed mb-2">
+              To withdraw your balance, you must first <span className="text-white font-bold">wager the amount</span> you have into your account through placing bets.
+            </p>
+            <p className="text-zinc-500 text-xs leading-relaxed mb-6">
+              Place bets on live or upcoming matches to meet the wagering requirement before requesting a withdrawal.
+            </p>
+            <div className="w-full space-y-3">
+              <button
+                onClick={() => setShowWagerNotice(false)}
+                className="w-full py-3.5 bg-orange-500 hover:bg-orange-400 text-black font-black rounded-2xl text-sm transition-all active:scale-95 shadow-lg shadow-orange-900/30"
+              >
+                I UNDERSTAND — CONTINUE
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full py-3 border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800 font-bold rounded-2xl text-sm transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : success ? (
           <div className="p-10 flex flex-col items-center text-center">
             <CheckCircle className="w-20 h-20 text-orange-400 mb-4" />
             <h3 className="text-2xl font-black text-white">Request Sent!</h3>
