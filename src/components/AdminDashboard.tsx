@@ -5,8 +5,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, CheckCircle, XCircle, RefreshCw, 
-  TrendingUp, Users, Wallet, Activity, Clock, Trophy, BadgeAlert, Coins
+  Users, Wallet, Activity, Clock, Trophy, Coins, RefreshCw, XCircle
 } from 'lucide-react';
 import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, increment, where, collectionGroup } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -414,7 +413,7 @@ export default function AdminDashboard({ user }: Props) {
             {mainTab === 'users' && (
               <div className="divide-y divide-zinc-800/60 p-2">
                 {allUsers.length === 0 && <p className="text-center py-16 text-zinc-500 font-bold">No users in database.</p>}
-                {allUsers.map((u, i) => (
+                {allUsers.map((u) => (
                   <div key={u.uid} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-zinc-800/20 rounded-2xl transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center text-zinc-400 font-black tracking-widest overflow-hidden shrink-0">
