@@ -175,23 +175,23 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     if (sessionStorage.getItem('mjb_deposit_shown')) return;
-    
+
     // Rate Limiting Logic based on User Type
     const isNewUser = (referralCount === 0 && balance === 0);
     const maxPrompts = isNewUser ? 5 : 3;
     const currentCount = parseInt(localStorage.getItem('mjb_promo_count') || '0', 10);
-    
+
     if (currentCount >= maxPrompts) return;
-    
+
     // Pop up instantly for users with 0 balance (e.g. newly registered), otherwise wait 9s
     const popupDelay = balance === 0 ? 1000 : 9000;
-    
+
     depositTimer.current = setTimeout(() => {
       setShowDeposit(true);
       sessionStorage.setItem('mjb_deposit_shown', '1');
       localStorage.setItem('mjb_promo_count', (currentCount + 1).toString());
     }, popupDelay);
-    
+
     return () => { if (depositTimer.current) clearTimeout(depositTimer.current); };
   }, [user, balance, referralCount]);
 
@@ -498,6 +498,15 @@ export default function App() {
                   transition={{ delay: i * 0.07 }}
                   className="bg-zinc-900 border border-zinc-800/80 rounded-3xl p-5 relative overflow-hidden"
                 >
+                  {/* Time badge - moved from absolute to top-centered for better mobile safety */}
+                  {m.time !== 'LIVE' && (
+                    <div className="flex justify-center mb-4">
+                      <div className="bg-zinc-800 border border-orange-500/20 text-orange-400 text-[9px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                        <Clock className="w-3 h-3" /> {m.time}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Teams header */}
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex flex-col items-center flex-1">
@@ -527,8 +536,8 @@ export default function App() {
                       <button key={o.label}
                         onClick={() => addToBetSlip(`upcoming-${m.id}`, o.full, o.odds)}
                         className={`flex flex-col items-center justify-center py-5 rounded-2xl border transition-all ${selectedOdds[`upcoming-${m.id}`] === o.full
-                            ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                            : 'bg-zinc-950 border-zinc-800 hover:border-emerald-500/50'
+                          ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                          : 'bg-zinc-950 border-zinc-800 hover:border-emerald-500/50'
                           }`}
                       >
                         <span className="text-[9px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2 whitespace-nowrap">{o.label}</span>
@@ -537,19 +546,10 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-
-                  {/* Live score bar (first) or time badge */}
-                  {m.time !== 'LIVE' && (
-                    <div className="absolute top-4 right-4 bg-zinc-800 border border-orange-500/20 text-orange-400 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                      <Clock className="w-3 h-3" /> {m.time}
-                    </div>
-                  )}
                 </motion.div>
               ))}
 
-              <p className="text-center text-[10px] text-zinc-600 font-bold uppercase tracking-widest pt-4 pb-8">
-                IPL BET 2026 DEMO • FOR DEMONSTRATION PURPOSES ONLY • NOT REAL MONEY GAMBLING
-              </p>
+              <div className="pb-8" />
             </div>
           )}
 
@@ -571,7 +571,7 @@ export default function App() {
                     className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-center gap-3"
                   >
                     <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${b.status === 'won' ? 'bg-emerald-400' :
-                        b.status === 'lost' ? 'bg-red-500' : 'bg-yellow-500'}`}
+                      b.status === 'lost' ? 'bg-red-500' : 'bg-yellow-500'}`}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-white truncate">{b.label}</p>
@@ -582,8 +582,8 @@ export default function App() {
                       <p className="text-xs text-zinc-500">₹{b.stake}</p>
                     </div>
                     <span className={`text-[10px] font-black px-2 py-1 rounded-full shrink-0 ${b.status === 'won' ? 'bg-emerald-500/20 text-emerald-400' :
-                        b.status === 'lost' ? 'bg-red-500/20 text-red-400' :
-                          'bg-yellow-500/20 text-yellow-400'}`}
+                      b.status === 'lost' ? 'bg-red-500/20 text-red-400' :
+                        'bg-yellow-500/20 text-yellow-400'}`}
                     >
                       {b.status.toUpperCase()}
                     </span>
