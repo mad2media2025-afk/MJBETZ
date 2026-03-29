@@ -43,7 +43,7 @@ export default function MyNetworks({ user, balance, referralCode, referralCount 
   const [couponError, setCouponError] = useState('');
   const [couponSuccess, setCouponSuccess] = useState(false);
 
-  const shareUrl = `https://mjbet-e4ed1.web.app/?ref=${referralCode}`;
+  const shareUrl = `${window.location.origin}?ref=${referralCode}`;
   const totalBonusEarned = referralCount * 1000;
 
   // ── Check if user already has a referral code applied ───────────────────

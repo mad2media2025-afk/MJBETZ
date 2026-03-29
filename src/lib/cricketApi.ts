@@ -39,46 +39,42 @@ function getTeamMeta(name: string, code?: string) {
 
 // ── Fallback Simulator ──────────────────────────────────────────────────────
 export const getSimulatedFallback = (prevMatch: LiveMatch): LiveMatch => {
-  // Since the user's API token is still unauthenticated/propagating,
-  // we are showing the EXACT match result from their screenshot to prove
-  // the UI successfully handles complex real-world data structures!
   return {
     ...prevMatch,
-    status: 'completed',
-    team1: 'Sunrisers Hyderabad',
-    team1Short: 'SRH',
-    team1Color: '#F26522',
-    score1: 201,
-    wickets1: 9,
-    overs: 20,
-    team2: 'Royal Challengers Bengaluru',
-    team2Short: 'RCB',
-    team2Color: '#EC1C24',
-    score2: 203,
-    wickets2: 4,
-    overs2: 15.4,
+    status: 'live',
+    team1: 'Kolkata Knight Riders',
+    team1Short: 'KKR',
+    team1Color: '#3A225D',
+    score1: 167,
+    wickets1: 3,
+    overs: 15.0,
+    team2: 'Mumbai Indians',
+    team2Short: 'MI',
+    team2Color: '#004BA0',
     totalOvers: 20,
-    target: 202,
-    crr: 13.23, // 203 / 15.33
+    target: 0,
+    crr: 11.13,
     rrr: 0,
-    team1WinProb: 0,
-    team2WinProb: 100,
-    currentInnings: 2,
-    battingTeamId: 0, // RCB
-    matchNote: 'Royal Challengers Bengaluru won by 6 wkts',
+    team1WinProb: 65,
+    team2WinProb: 35,
+    currentInnings: 1,
+    battingTeamId: 0, // KKR
+    matchNote: 'Mumbai Indians opt to bowl',
     batsmen: [
-      { name: 'Virat Kohli', runs: 82, balls: 41, fours: 6, sixes: 5, strikeRate: 200, isStriker: true },
-      { name: 'Glenn Maxwell', runs: 34, balls: 14, fours: 3, sixes: 3, strikeRate: 242.8, isStriker: false }
+      { name: 'Rinku Singh', runs: 8, balls: 4, fours: 1, sixes: 0, strikeRate: 200.00, isStriker: true },
+      { name: 'Angkrish Raghuvanshi', runs: 31, balls: 19, fours: 4, sixes: 1, strikeRate: 163.16, isStriker: false }
     ],
-    bowler: { name: 'Pat Cummins', overs: '3.4', wickets: 1, economy: 11.5, runsConceded: 42 },
+    bowler: { name: 'Shardul Thakur', overs: '3.0', wickets: 3, economy: 8.33, runsConceded: 25 },
     allBatsmen: [
-      { name: 'Faf du Plessis (c)', runs: 45, balls: 22, fours: 5, sixes: 2, strikeRate: 204.5, isActive: false, howOut: 'out' },
-      { name: 'Virat Kohli', runs: 82, balls: 41, fours: 6, sixes: 5, strikeRate: 200, isActive: true },
-      { name: 'Rajat Patidar', runs: 12, balls: 8, fours: 1, sixes: 0, strikeRate: 150, isActive: false, howOut: 'out' },
-      { name: 'Cameron Green', runs: 28, balls: 12, fours: 2, sixes: 2, strikeRate: 233.3, isActive: false, howOut: 'out' },
-      { name: 'Glenn Maxwell', runs: 34, balls: 14, fours: 3, sixes: 3, strikeRate: 242.8, isActive: true }
+      { name: 'Ajinkya Rahane', runs: 67, balls: 40, fours: 6, sixes: 3, strikeRate: 167.5, isActive: false, howOut: 'c Hardik b Shardul' },
+      { name: 'Rinku Singh', runs: 8, balls: 4, fours: 1, sixes: 0, strikeRate: 200.00, isActive: true },
+      { name: 'Angkrish Raghuvanshi', runs: 31, balls: 19, fours: 4, sixes: 1, strikeRate: 163.16, isActive: true }
     ],
-    lastOverRuns: ['1', '4', '6', '1', 'W', '4'],
+    allBowlers: [
+      { name: 'Shardul Thakur', overs: '3.0', wickets: 3, economy: 8.33, runsConceded: 25, maidens: 0, isActive: true },
+      { name: 'AM Ghazanfar', overs: '4.0', wickets: 0, economy: 12.75, runsConceded: 51, maidens: 0, isActive: false }
+    ],
+    lastOverRuns: ['1', '1', '1', '2', 'W', '4'],
     lastBall: '4',
     isLiveFromApi: false
   };

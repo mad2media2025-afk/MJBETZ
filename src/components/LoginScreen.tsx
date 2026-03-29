@@ -2,7 +2,7 @@
  * LoginScreen.tsx — Email/Password Authentication Gate
  * Two modes: Create Account | Existing User (Sign In)
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trophy, Shield, Zap, TrendingUp,
@@ -58,6 +58,16 @@ export default function LoginScreen({ onLogin }: Props) {
   const [suRef, setSuRef] = useState('');
 
   const clearError = () => setError('');
+
+  // ── Auto-fill Referral Code from URL ────────────────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refParam = params.get('ref');
+    if (refParam) {
+      setSuRef(refParam.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10));
+      setMode('signup');
+    }
+  }, []);
 
   // ── Google Sign-In (for existing users) ─────────────────────────────────
   const handleGoogleSignIn = async () => {
