@@ -111,8 +111,8 @@ export default function ReferralCodeEntry({ uid, onClose }: Props) {
                 <div className="w-14 h-14 bg-yellow-400 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
                   <Gift className="w-7 h-7 text-yellow-900" />
                 </div>
-                <h2 className="text-2xl font-black text-white">Got a Referral Code?</h2>
-                <p className="text-indigo-200 text-sm mt-1">Enter your friend's code & get <span className="text-yellow-300 font-black">₹100 bonus</span> when you deposit!</p>
+                <h2 className="text-2xl font-black text-white">Have a coupon code?</h2>
+                <p className="text-indigo-200 text-sm mt-1">Enter it below & get <span className="text-yellow-300 font-black">₹100 bonus</span> on your first deposit!</p>
               </div>
 
               <div className="px-6 py-6 space-y-4">
@@ -145,8 +145,11 @@ export default function ReferralCodeEntry({ uid, onClose }: Props) {
                   {isSubmitting ? 'VERIFYING...' : (<>APPLY CODE <ArrowRight className="w-4 h-4" /></>)}
                 </button>
 
-                <button onClick={onClose} className="w-full text-center text-xs text-zinc-600 hover:text-zinc-400 transition py-1">
-                  Skip, I don't have a code
+                <button 
+                  onClick={onClose} 
+                  className="w-full py-3.5 font-bold rounded-2xl text-sm transition-all border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800 mt-3"
+                >
+                  SKIP
                 </button>
               </div>
             </>

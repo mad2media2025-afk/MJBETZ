@@ -145,17 +145,25 @@ export default function ReferralPopup({ referralCode, onClose }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md"
+        className="fixed inset-0 z-[110] flex flex-col items-center justify-end sm:justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md"
         onClick={e => e.target === e.currentTarget && onClose()}
       >
+        {/* Floating Exit Button for better UX on all screens */}
+        <div className="w-full max-w-sm flex justify-end px-4 sm:px-0 mb-3 z-[115]">
+          <button onClick={onClose}
+            className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center text-white hover:bg-zinc-700 transition shadow-xl active:scale-95">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
         <motion.div
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-          className="sm:hidden bg-zinc-900 border-t border-zinc-700 rounded-t-3xl w-full shadow-2xl overflow-y-auto max-h-[92vh]"
+          className="sm:hidden bg-zinc-900 border-t border-zinc-700 rounded-t-3xl w-full shadow-2xl overflow-y-auto max-h-[80vh]"
         >
-          <ReferralContent referralCode={referralCode} referralLink={referralLink} platforms={platforms} onClose={onClose} onShare={handleSocialShare} />
+          <ReferralContent referralCode={referralCode} referralLink={referralLink} platforms={platforms} onShare={handleSocialShare} />
         </motion.div>
 
         {/* Desktop card */}
@@ -164,9 +172,9 @@ export default function ReferralPopup({ referralCode, onClose }: Props) {
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.85, opacity: 0 }}
           transition={{ type: 'spring', damping: 20, stiffness: 280 }}
-          className="hidden sm:block bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-sm shadow-2xl overflow-y-auto max-h-[90vh]"
+          className="hidden sm:block bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-sm shadow-2xl overflow-y-auto max-h-[80vh]"
         >
-          <ReferralContent referralCode={referralCode} referralLink={referralLink} platforms={platforms} onClose={onClose} onShare={handleSocialShare} />
+          <ReferralContent referralCode={referralCode} referralLink={referralLink} platforms={platforms} onShare={handleSocialShare} />
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -174,12 +182,11 @@ export default function ReferralPopup({ referralCode, onClose }: Props) {
 }
 
 function ReferralContent({
-  referralCode, referralLink, platforms, onClose, onShare,
+  referralCode, referralLink, platforms, onShare,
 }: {
   referralCode: string;
   referralLink: string;
   platforms: ReturnType<typeof SOCIAL_PLATFORMS>;
-  onClose: () => void;
   onShare: (p: ReturnType<typeof SOCIAL_PLATFORMS>[0]) => void;
 }) {
   return (
@@ -188,12 +195,6 @@ function ReferralContent({
       <div className="sm:hidden flex justify-center pt-3 pb-1">
         <div className="w-10 h-1 rounded-full bg-zinc-700" />
       </div>
-
-      {/* Close */}
-      <button onClick={onClose}
-        className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition">
-        <X className="w-4 h-4" />
-      </button>
 
       {/* Banner — cricket players background */}
       <div className="relative px-6 pt-6 pb-8 text-center overflow-hidden min-h-[220px] flex flex-col items-center justify-end">

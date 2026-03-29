@@ -89,9 +89,9 @@ export default function App() {
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   // Bet slip
-  const [betSlip, setBetSlip]         = useState<BetSlipItem[]>([]);
+  const [betSlip, setBetSlip] = useState<BetSlipItem[]>([]);
   const [selectedOdds, setSelectedOdds] = useState<Record<string, string>>({});
-  const [isPlacing, setIsPlacing]     = useState(false);
+  const [isPlacing, setIsPlacing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // History — synced from Firestore in real-time, NOT localStorage
@@ -101,7 +101,7 @@ export default function App() {
   const settledRef = useRef<Set<string>>(new Set());
 
   const depositTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const liveTimer    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const liveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 1. Firebase Auth Listener
   useEffect(() => {
@@ -176,16 +176,24 @@ export default function App() {
     if (!user) return;
     if (sessionStorage.getItem('mjb_deposit_shown')) return;
     
+    // Rate Limiting Logic based on User Type
+    const isNewUser = (referralCount === 0 && balance === 0);
+    const maxPrompts = isNewUser ? 5 : 3;
+    const currentCount = parseInt(localStorage.getItem('mjb_promo_count') || '0', 10);
+    
+    if (currentCount >= maxPrompts) return;
+    
     // Pop up instantly for users with 0 balance (e.g. newly registered), otherwise wait 9s
     const popupDelay = balance === 0 ? 1000 : 9000;
     
     depositTimer.current = setTimeout(() => {
       setShowDeposit(true);
       sessionStorage.setItem('mjb_deposit_shown', '1');
+      localStorage.setItem('mjb_promo_count', (currentCount + 1).toString());
     }, popupDelay);
     
     return () => { if (depositTimer.current) clearTimeout(depositTimer.current); };
-  }, [user, balance]);
+  }, [user, balance, referralCount]);
 
   const showToast = useCallback((msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ msg, type });
@@ -271,7 +279,7 @@ export default function App() {
     setBetSlip(p => p.map(b => b.id === id ? { ...b, stake } : b));
   }, []);
 
-  const totalStake  = betSlip.reduce((s, b) => s + b.stake, 0);
+  const totalStake = betSlip.reduce((s, b) => s + b.stake, 0);
   const totalReturn = betSlip.reduce((s, b) => s + b.stake * b.odds, 0);
 
   const placeBet = useCallback(async () => {
@@ -374,8 +382,8 @@ export default function App() {
             initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -60, opacity: 0 }}
             className={`fixed top-4 left-1/2 -translate-x-1/2 z-[300] px-5 py-2.5 rounded-2xl text-sm font-semibold shadow-xl whitespace-nowrap
               ${toast.type === 'success' ? 'bg-emerald-600 text-white' :
-                toast.type === 'error'   ? 'bg-red-600 text-white' :
-                                           'bg-zinc-800 border border-zinc-700 text-zinc-300'}`}
+                toast.type === 'error' ? 'bg-red-600 text-white' :
+                  'bg-zinc-800 border border-zinc-700 text-zinc-300'}`}
           >
             {toast.msg}
           </motion.div>
@@ -518,11 +526,10 @@ export default function App() {
                     ].map(o => (
                       <button key={o.label}
                         onClick={() => addToBetSlip(`upcoming-${m.id}`, o.full, o.odds)}
-                        className={`flex flex-col items-center justify-center py-5 rounded-2xl border transition-all ${
-                          selectedOdds[`upcoming-${m.id}`] === o.full
+                        className={`flex flex-col items-center justify-center py-5 rounded-2xl border transition-all ${selectedOdds[`upcoming-${m.id}`] === o.full
                             ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
                             : 'bg-zinc-950 border-zinc-800 hover:border-emerald-500/50'
-                        }`}
+                          }`}
                       >
                         <span className="text-[9px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2 whitespace-nowrap">{o.label}</span>
                         <span className="text-3xl sm:text-4xl font-black text-emerald-400 leading-none">{o.odds}</span>
@@ -563,9 +570,8 @@ export default function App() {
                     transition={{ delay: i * 0.03 }}
                     className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-center gap-3"
                   >
-                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                      b.status === 'won' ? 'bg-emerald-400' :
-                      b.status === 'lost' ? 'bg-red-500' : 'bg-yellow-500'}`}
+                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${b.status === 'won' ? 'bg-emerald-400' :
+                        b.status === 'lost' ? 'bg-red-500' : 'bg-yellow-500'}`}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-white truncate">{b.label}</p>
@@ -575,10 +581,9 @@ export default function App() {
                       <p className="text-sm font-black text-orange-400">@{b.odds}</p>
                       <p className="text-xs text-zinc-500">₹{b.stake}</p>
                     </div>
-                    <span className={`text-[10px] font-black px-2 py-1 rounded-full shrink-0 ${
-                      b.status === 'won'  ? 'bg-emerald-500/20 text-emerald-400' :
-                      b.status === 'lost' ? 'bg-red-500/20 text-red-400' :
-                                            'bg-yellow-500/20 text-yellow-400'}`}
+                    <span className={`text-[10px] font-black px-2 py-1 rounded-full shrink-0 ${b.status === 'won' ? 'bg-emerald-500/20 text-emerald-400' :
+                        b.status === 'lost' ? 'bg-red-500/20 text-red-400' :
+                          'bg-yellow-500/20 text-yellow-400'}`}
                     >
                       {b.status.toUpperCase()}
                     </span>

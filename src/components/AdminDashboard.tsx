@@ -60,16 +60,26 @@ export default function AdminDashboard({ user }: Props) {
     try {
       // 1. Mark deposit as processed
       const depRef = doc(db, 'deposits', deposit.id);
-      await updateDoc(depRef, { status: action });
+      try {
+        await updateDoc(depRef, { status: action });
+      } catch (depErr) {
+        console.error('Deposit update error:', depErr);
+        throw new Error('Failed to update deposit status. Check Firestore Rules for deposits collection.');
+      }
 
       // 2. If approved, add 2× money to user (deposit + 100% welcome bonus)
       if (action === 'approved') {
         const userRef = doc(db, 'users', deposit.uid);
-        await updateDoc(userRef, {
-          balance: increment(deposit.amount * 2) // 2× credited amount
-        });
+        try {
+          await updateDoc(userRef, {
+            balance: increment(deposit.amount * 2)
+          });
+        } catch (usrErr) {
+          console.error('User balance update error:', usrErr);
+          throw new Error('Failed to update user balance. The user document might be missing or rules restrict it.');
+        }
 
-        // 3. Check if this user was referred — if so, attempt referral reward
+        // 3. Check if this user was referred — if so, attempt referral reward safely
         try {
           const referralsRef = collection(db, 'referrals');
           const rq = query(referralsRef,
@@ -80,24 +90,25 @@ export default function AdminDashboard({ user }: Props) {
           if (!rSnap.empty) {
             const refDoc = rSnap.docs[0];
             const referral = refDoc.data();
-            // Credit ₹1,000 to the referrer
             const referrerRef = doc(db, 'users', referral.referrerUid);
-            await updateDoc(referrerRef, { balance: increment(1000), referralCount: increment(1) });
-            // Credit ₹100 bonus to the referee (the depositing user) for joining via referral
-            await updateDoc(userRef, { balance: increment(100) });
-            // Mark referral as rewarded
-            await updateDoc(doc(db, 'referrals', refDoc.id), { status: 'rewarded' });
+            
+            // We use independent tries for these to prevent one from crashing the other
+            try { await updateDoc(referrerRef, { balance: increment(1000), referralCount: increment(1) }); } catch (e) { console.warn('Referrer reward failed:', e); }
+            try { await updateDoc(userRef, { balance: increment(100) }); } catch (e) { console.warn('Referee bonus failed:', e); }
+            try { await updateDoc(doc(db, 'referrals', refDoc.id), { status: 'rewarded' }); } catch (e) { console.warn('Referral status update failed:', e); }
           }
         } catch (refErr) {
-          console.warn('Referral reward error:', refErr);
+          // If indexing fails or anything else, log it but don't crash the deposit acceptance
+          console.warn('Referral query error (likely needs an index):', refErr);
         }
       }
 
       // Update local state to reflect change without refetching immediately
       setDeposits(prev => prev.map(d => d.id === deposit.id ? { ...d, status: action } : d));
-    } catch (e) {
-      console.error(e);
-      alert("Failed to process transaction.");
+      alert(`Success! Deposit ${action} successfully.`);
+    } catch (e: any) {
+      console.error('Admin Action Failed:', e);
+      alert(`Error processing transaction: ${e.message || 'Unknown error occurred.'}`);
     } finally {
       setProcessingId(null);
     }

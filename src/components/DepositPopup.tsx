@@ -85,7 +85,7 @@ export default function DepositPopup({ user, onClose, onClosedWithoutDeposit }: 
   };
 
   const handleSubmit = async () => {
-    if (amountError || utr.length < 10) return;
+    if (amountError || utr.length !== 12) return;
     setIsSubmitting(true);
     try {
       await addDoc(collection(db, 'deposits'), {
@@ -109,17 +109,25 @@ export default function DepositPopup({ user, onClose, onClosedWithoutDeposit }: 
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-black/80 backdrop-blur-md"
       onClick={e => e.target === e.currentTarget && handleClose()}
     >
+      {/* Floating Exit Button for better mobile UX */}
+      <div className="w-full max-w-sm flex justify-end mb-3">
+        <button onClick={handleClose}
+          className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center text-white hover:bg-zinc-700 transition shadow-xl active:scale-95">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
       <motion.div
         initial={{ scale: 0.85, y: 40 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 40 }}
         transition={{ type: 'spring', damping: 22, stiffness: 300 }}
-        className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden relative max-h-[92vh] overflow-y-auto"
+        className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden relative max-h-[80vh] overflow-y-auto"
       >
         {/* ── Success Screen ── */}
         {success ? (
-          <div className="p-10 flex flex-col items-center text-center">
+          <div className="p-8 sm:p-10 flex flex-col items-center text-center">
             <motion.div
               initial={{ scale: 0 }} animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 260, damping: 18 }}
@@ -140,11 +148,7 @@ export default function DepositPopup({ user, onClose, onClosedWithoutDeposit }: 
         ) : (
           <>
             {/* ── Gradient Banner ── */}
-            <div className="relative bg-gradient-to-br from-emerald-800 via-emerald-600 to-emerald-900 px-6 pt-6 pb-8 text-center">
-              <button onClick={handleClose}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition">
-                <X className="w-4 h-4" />
-              </button>
+            <div className="relative bg-gradient-to-br from-emerald-800 via-emerald-600 to-emerald-900 px-6 pt-5 pb-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Zap className="w-5 h-5 text-yellow-300" />
                 <span className="text-yellow-300 font-black text-sm uppercase tracking-widest">Welcome Bonus</span>
@@ -309,12 +313,12 @@ export default function DepositPopup({ user, onClose, onClosedWithoutDeposit }: 
             </div>
 
             {/* ── Submit ── */}
-            <div className="px-6 py-5 bg-zinc-900/50">
+            <div className="px-6 py-4 bg-zinc-900/50">
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !!amountError || utr.length < 10}
+                disabled={isSubmitting || !!amountError || utr.length !== 12}
                 className={`w-full py-4 font-black rounded-2xl text-sm transition-all shadow-lg flex justify-center items-center gap-2 ${
-                  isSubmitting || !!amountError || utr.length < 10
+                  isSubmitting || !!amountError || utr.length !== 12
                     ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                     : 'bg-emerald-500 text-black hover:bg-emerald-400 hover:scale-[1.02] shadow-emerald-900/40'
                 }`}
