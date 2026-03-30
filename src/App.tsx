@@ -540,7 +540,7 @@ export default function App() {
               <Instagram className="w-5 h-5" />
               <span className="text-sm font-bold">Instagram</span>
             </a>
-            <a href="mailto:support@mjbet.com" className="flex items-center gap-3 text-zinc-400 hover:text-emerald-400 transition bg-zinc-900 px-4 py-2 rounded-xl border border-zinc-800">
+            <a href="mailto:mjbetz2k26@gmail.com" className="flex items-center gap-3 text-zinc-400 hover:text-emerald-400 transition bg-zinc-900 px-4 py-2 rounded-xl border border-zinc-800">
               <Mail className="w-5 h-5" />
               <span className="text-sm font-bold">Contact Us</span>
             </a>
