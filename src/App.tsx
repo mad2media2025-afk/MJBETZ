@@ -30,27 +30,26 @@ import type { User, LiveMatch as LiveMatchType, BetSlipItem, PlacedBet } from '.
 // ─── Match data ───────────────────────────────────────────────────────────────
 
 const INIT_MATCH: LiveMatchType = {
-  status: 'live',                         // ← Match is LIVE now
-  startTime: '2026-03-28T13:30:00Z',      // ← Backdated
-  team1: 'Sunrisers Hyderabad', team2: 'Royal Challengers Bengaluru',
-  team1Short: 'SRH', team2Short: 'RCB',
-  team1Color: '#F26522', team2Color: '#EC1C24',
-  score1: 7, wickets1: 0, overs: 1.0, totalOvers: 20, target: 0,
-  crr: 7.0, rrr: 0, team1WinProb: 43, team2WinProb: 57,
-  lastOverRuns: [0, 1, 0, 6, 0, 0],
+  status: 'live',
+  startTime: '2026-03-30T14:00:00Z',
+  team1: 'Chennai Super Kings', team2: 'Rajasthan Royals',
+  team1Short: 'CSK', team2Short: 'RR',
+  team1Color: '#FFCB05', team2Color: '#E73895',
+  score1: 127, wickets1: 10, overs: 9.5, totalOvers: 20, target: 128,
+  crr: 10.78, rrr: 2.16, team1WinProb: 10, team2WinProb: 90,
+  lastOverRuns: ['1', '0', '4', '1', '0', '.', '1'],
   batsmen: [
-    { name: 'Abhishek Sharma', runs: 6, balls: 4, fours: 0, sixes: 1 },
-    { name: 'Travis Head *', runs: 1, balls: 2, fours: 0, sixes: 0 },
+    { name: 'Riyan Parag *', runs: 6, balls: 5, fours: 1, sixes: 0 },
+    { name: 'Yashasvi Jaiswal', runs: 25, balls: 28, fours: 3, sixes: 0 },
   ],
-  bowler: { name: 'Jacob Duffy *', overs: '1.0', wickets: 0, economy: 7.0 },
-  lastBall: '0',
+  bowler: { name: 'Khaleel Ahmed *', overs: '2.5', wickets: 0, economy: 6.0 },
+  lastBall: '1',
 };
 
 const UPCOMING = [
-  { id: 'm2', team1: 'MI', team1Name: 'Indians', team2: 'KKR', team2Name: 'Riders', time: 'Mar 29, 7:30 PM', odds1: 1.90, odds2: 1.90 },
-  { id: 'm3', team1: 'RR', team1Name: 'Royals', team2: 'CSK', team2Name: 'Super Kings', time: 'Mar 30, 7:30 PM', odds1: 2.05, odds2: 1.80 },
   { id: 'm4', team1: 'PBKS', team1Name: 'Kings', team2: 'GT', team2Name: 'Titans', time: 'Mar 31, 7:30 PM', odds1: 2.20, odds2: 1.65 },
   { id: 'm5', team1: 'LSG', team1Name: 'Super Giants', team2: 'DC', team2Name: 'Capitals', time: 'Apr 01, 7:30 PM', odds1: 1.85, odds2: 2.00 },
+  { id: 'm6', team1: 'RCB', team1Name: 'Bengaluru', team2: 'MI', team2Name: 'Indians', time: 'Apr 02, 7:30 PM', odds1: 1.95, odds2: 1.85 },
 ];
 
 function uid() { return Math.random().toString(36).slice(2, 10); }

@@ -18,15 +18,15 @@ const API_BASE = import.meta.env.DEV ? '/api/cricket' : (import.meta.env.VITE_CR
 const IPL_TEAMS: Record<string, { short: string; color: string }> = {
   'Royal Challengers Bengaluru': { short: 'RCB', color: '#EC1C24' },
   'Royal Challengers Bangalore': { short: 'RCB', color: '#EC1C24' },
-  'Chennai Super Kings':         { short: 'CSK', color: '#FFCB05' },
-  'Mumbai Indians':              { short: 'MI',  color: '#004BA0' },
-  'Kolkata Knight Riders':       { short: 'KKR', color: '#3A225D' },
-  'Sunrisers Hyderabad':         { short: 'SRH', color: '#F26522' },
-  'Rajasthan Royals':            { short: 'RR',  color: '#E73895' },
-  'Delhi Capitals':              { short: 'DC',  color: '#0078BC' },
-  'Punjab Kings':                { short: 'PBKS', color: '#ED1B24' },
-  'Gujarat Titans':              { short: 'GT',  color: '#1B2133' },
-  'Lucknow Super Giants':        { short: 'LSG', color: '#A72056' },
+  'Chennai Super Kings': { short: 'CSK', color: '#FFCB05' },
+  'Mumbai Indians': { short: 'MI', color: '#004BA0' },
+  'Kolkata Knight Riders': { short: 'KKR', color: '#3A225D' },
+  'Sunrisers Hyderabad': { short: 'SRH', color: '#F26522' },
+  'Rajasthan Royals': { short: 'RR', color: '#E73895' },
+  'Delhi Capitals': { short: 'DC', color: '#0078BC' },
+  'Punjab Kings': { short: 'PBKS', color: '#ED1B24' },
+  'Gujarat Titans': { short: 'GT', color: '#1B2133' },
+  'Lucknow Super Giants': { short: 'LSG', color: '#A72056' },
 };
 
 function getTeamMeta(name: string, code?: string) {
@@ -42,40 +42,40 @@ export const getSimulatedFallback = (prevMatch: LiveMatch): LiveMatch => {
   return {
     ...prevMatch,
     status: 'live',
-    team1: 'Kolkata Knight Riders',
-    team1Short: 'KKR',
-    team1Color: '#3A225D',
-    score1: 167,
-    wickets1: 3,
-    overs: 15.0,
-    team2: 'Mumbai Indians',
-    team2Short: 'MI',
-    team2Color: '#004BA0',
+    team1: 'Chennai Super Kings',
+    team1Short: 'CSK',
+    team1Color: '#FFCB05',
+    score1: 127,
+    wickets1: 10,
+    overs: 19.4,
+    team2: 'Rajasthan Royals',
+    team2Short: 'RR',
+    team2Color: '#E73895',
     totalOvers: 20,
-    target: 0,
-    crr: 11.13,
-    rrr: 0,
-    team1WinProb: 65,
-    team2WinProb: 35,
-    currentInnings: 1,
-    battingTeamId: 0, // KKR
-    matchNote: 'Mumbai Indians opt to bowl',
+    target: 128,
+    crr: 10.78,
+    rrr: 2.16,
+    team1WinProb: 10,
+    team2WinProb: 90,
+    currentInnings: 2,
+    battingTeamId: 1, // RR
+    matchNote: 'Rajasthan Royals need 26 runs in 62 balls',
     batsmen: [
-      { name: 'Rinku Singh', runs: 8, balls: 4, fours: 1, sixes: 0, strikeRate: 200.00, isStriker: true },
-      { name: 'Angkrish Raghuvanshi', runs: 31, balls: 19, fours: 4, sixes: 1, strikeRate: 163.16, isStriker: false }
+      { name: 'Riyan Parag', runs: 6, balls: 5, fours: 1, sixes: 0, strikeRate: 120.00, isStriker: true },
+      { name: 'Yashasvi Jaiswal', runs: 25, balls: 28, fours: 3, sixes: 0, strikeRate: 89.29, isStriker: false }
     ],
-    bowler: { name: 'Shardul Thakur', overs: '3.0', wickets: 3, economy: 8.33, runsConceded: 25 },
+    bowler: { name: 'Khaleel Ahmed', overs: '2.5', wickets: 0, economy: 6.00, runsConceded: 17 },
     allBatsmen: [
-      { name: 'Ajinkya Rahane', runs: 67, balls: 40, fours: 6, sixes: 3, strikeRate: 167.5, isActive: false, howOut: 'c Hardik b Shardul' },
-      { name: 'Rinku Singh', runs: 8, balls: 4, fours: 1, sixes: 0, strikeRate: 200.00, isActive: true },
-      { name: 'Angkrish Raghuvanshi', runs: 31, balls: 19, fours: 4, sixes: 1, strikeRate: 163.16, isActive: true }
+      { name: 'Yashasvi Jaiswal', runs: 25, balls: 28, fours: 3, sixes: 0, strikeRate: 89.29, isActive: true },
+      { name: 'Riyan Parag', runs: 6, balls: 5, fours: 1, sixes: 0, strikeRate: 120.00, isActive: true },
+      { name: 'Sanju Samson', runs: 42, balls: 22, fours: 4, sixes: 2, strikeRate: 190.9, isActive: false, howOut: 'lbw b Kamboj' }
     ],
     allBowlers: [
-      { name: 'Shardul Thakur', overs: '3.0', wickets: 3, economy: 8.33, runsConceded: 25, maidens: 0, isActive: true },
-      { name: 'AM Ghazanfar', overs: '4.0', wickets: 0, economy: 12.75, runsConceded: 51, maidens: 0, isActive: false }
+      { name: 'Khaleel Ahmed', overs: '2.5', wickets: 0, economy: 6.00, runsConceded: 17, maidens: 0, isActive: true },
+      { name: 'Anshul Kamboj', overs: '3.0', wickets: 2, economy: 9.00, runsConceded: 27, maidens: 0, isActive: false }
     ],
-    lastOverRuns: ['1', '1', '1', '2', 'W', '4'],
-    lastBall: '4',
+    lastOverRuns: ['1', '0', '4', '1', '0', '.', '1'],
+    lastBall: '1',
     isLiveFromApi: false
   };
 };
