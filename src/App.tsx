@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Target, Clock } from 'lucide-react';
+import { CheckCircle, Target, Clock, Instagram, Mail } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import {
   doc, onSnapshot, collection, addDoc,
@@ -20,7 +20,7 @@ import BetSlip from './components/BetSlip';
 import LiveMatch from './components/LiveMatch';
 import BettingMarkets from './components/BettingMarkets';
 import AdminDashboard from './components/AdminDashboard';
-// import TossBetting from './components/TossBetting';
+import TossBetting from './components/TossBetting';
 import ReferralPopup from './components/ReferralPopup';
 import MyNetworks from './components/MyNetworks';
 import { fetchLiveMatchData } from './lib/cricketApi';
@@ -30,20 +30,26 @@ import type { User, LiveMatch as LiveMatchType, BetSlipItem, PlacedBet } from '.
 // ─── Match data ───────────────────────────────────────────────────────────────
 
 const INIT_MATCH: LiveMatchType = {
-  status: 'live',
+  status: 'completed',
   startTime: '2026-03-30T14:00:00Z',
   team1: 'Chennai Super Kings', team2: 'Rajasthan Royals',
   team1Short: 'CSK', team2Short: 'RR',
   team1Color: '#FFCB05', team2Color: '#E73895',
-  score1: 127, wickets1: 10, overs: 9.5, totalOvers: 20, target: 128,
-  crr: 10.78, rrr: 2.16, team1WinProb: 10, team2WinProb: 90,
-  lastOverRuns: ['1', '0', '4', '1', '0', '.', '1'],
+  score1: 127, wickets1: 10, overs: 19.4, 
+  score2: 128, wickets2: 2, overs2: 12.1,
+  totalOvers: 20, target: 128,
+  crr: 10.58, rrr: 0, 
+  team1WinProb: 0, team2WinProb: 100,
+  result: 'Rajasthan Royals won by 8 wkts',
+  potm: 'Nandre Burger',
+  matchNote: 'RR won by 8 wickets • Nandre Burger (POTM)',
+  lastOverRuns: ['W', '0', '1', 'W', '0', '2'],
   batsmen: [
-    { name: 'Riyan Parag *', runs: 6, balls: 5, fours: 1, sixes: 0 },
-    { name: 'Yashasvi Jaiswal', runs: 25, balls: 28, fours: 3, sixes: 0 },
+    { name: 'Riyan Parag', runs: 35, balls: 18, fours: 4, sixes: 2 },
+    { name: 'Yashasvi Jaiswal', runs: 65, balls: 40, fours: 8, sixes: 3 },
   ],
-  bowler: { name: 'Khaleel Ahmed *', overs: '2.5', wickets: 0, economy: 6.0 },
-  lastBall: '1',
+  bowler: { name: 'Nandre Burger', overs: '4.0', wickets: 3, economy: 5.25, runsConceded: 21 },
+  lastBall: '4',
 };
 
 const UPCOMING = [
@@ -57,6 +63,27 @@ function uid() { return Math.random().toString(36).slice(2, 10); }
 /** Generates a unique 8-char alphanumeric referral code from UID */
 function generateReferralCode(firebaseUid: string): string {
   return firebaseUid.slice(0, 8).toUpperCase();
+}
+
+/**
+ * Checks if current time is Toss Time (6:45 PM - 7:15 PM IST)
+ */
+function isTossTime(): boolean {
+  const now = new Date();
+  
+  // Convert to IST (UTC+5:30)
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(now.getTime() + istOffset);
+  
+  const hours = istTime.getUTCHours();
+  const minutes = istTime.getUTCMinutes();
+  
+  // Toss Window: 18:45 to 19:15 IST
+  const timeInMinutes = hours * 60 + minutes;
+  const startTime = 18 * 60 + 45; // 6:45 PM
+  const endTime = 19 * 60 + 15;   // 7:15 PM
+  
+  return timeInMinutes >= startTime && timeInMinutes <= endTime;
 }
 
 
@@ -118,15 +145,14 @@ export default function App() {
           email: firestoreData?.email || firebaseUser.email || '',
           avatar: firebaseUser.photoURL || '',
           referralCode: firestoreData?.referralCode || code,
+          isAdmin: firestoreData?.isAdmin || false,
         };
         setUser(u);
         setReferralCode(firestoreData?.referralCode || code);
         localStorage.setItem('mjb_user', JSON.stringify(u));
 
         if (!snap.exists()) {
-          // Doc not yet created — LoginScreen creates it during signup.
-          // onSnapshot listener (below) will fire automatically once it's written.
-          // Do NOT create here to avoid race-condition overwriting referral bonus credits.
+          // New doc creation is handled in LoginScreen signup phase.
         } else if (!firestoreData?.referralCode) {
           // Migration: existing user missing referralCode field
           await updateDoc(userRef, { referralCode: code });
@@ -199,19 +225,10 @@ export default function App() {
 
     const fetchLive = async () => {
       try {
-        // Task 5a: Pre-match guard — don't poll/simulate while counting down
-        if (matchRef.current.status === 'pre-match') {
-          if (matchRef.current.startTime && new Date() >= new Date(matchRef.current.startTime)) {
-            // Automatically snap to live when time hits!
-            setMatch(prev => ({ ...prev, status: 'live' }));
-          }
-          return;
-        }
-
         const newData = await fetchLiveMatchData(matchRef.current);
         setMatch(newData);
 
-        // ── Task 5: Auto-settle when a team hits >= 95% win probability ──
+        // ── Auto-settle when a team hits >= 95% win probability ──
         const settlementKey = `${newData.team1}-${newData.team2}-${newData.score1}-${newData.wickets1}`;
         if (!settledRef.current.has(settlementKey)) {
           if (newData.team1WinProb >= 95) {
@@ -238,16 +255,6 @@ export default function App() {
     liveTimer.current = setInterval(fetchLive, 5000);
     return () => { if (liveTimer.current) clearInterval(liveTimer.current); };
   }, [user, showToast]);
-
-  // Right-click security
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      e.preventDefault();
-      showToast('🔒 Right-click disabled for security.', 'info');
-    };
-    document.addEventListener('contextmenu', handler);
-    return () => document.removeEventListener('contextmenu', handler);
-  }, []);
 
   // Bet slip actions
   const addToBetSlip = useCallback((market: string, label: string, odds: number) => {
@@ -277,7 +284,7 @@ export default function App() {
 
   const placeBet = useCallback(async () => {
     if (!user?.uid || !betSlip.length) return;
-    if (isPlacing) return; // Prevent double-click
+    if (isPlacing) return;
     setIsPlacing(true);
 
     try {
@@ -285,21 +292,15 @@ export default function App() {
       const betsCol = collection(db, 'placedBets', user.uid, 'bets');
       const now = Date.now();
 
-      // ── Firestore Transaction: atomic balance check + deduct ──
       await runTransaction(db, async (transaction) => {
         const userSnap = await transaction.get(userRef);
-        if (!userSnap.exists()) throw new Error('User document not found.');
-
-        const currentBalance: number = userSnap.data().balance || 0;
+        const currentBalance: number = userSnap.data()?.balance || 0;
         if (currentBalance < totalStake) {
           throw new Error(`Insufficient balance. Have ₹${currentBalance}, need ₹${totalStake}.`);
         }
-
-        // Deduct stake atomically
         transaction.update(userRef, { balance: currentBalance - totalStake });
       });
 
-      // ── Write each bet as a Firestore document ──
       const writePromises = betSlip.map((b, i) =>
         addDoc(betsCol, {
           market: b.market,
@@ -316,26 +317,24 @@ export default function App() {
       );
       await Promise.all(writePromises);
 
-      // ── Clear slip and show success ──
       setBetSlip([]);
       setSelectedOdds({});
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2500);
     } catch (error: any) {
       console.error('Bet placement failed', error);
-      showToast(error?.message || 'Error placing bet. Try again.', 'error');
+      showToast(error?.message || 'Error placing bet.', 'error');
     } finally {
       setIsPlacing(false);
     }
   }, [betSlip, totalStake, user, isPlacing, match, showToast]);
 
-  const handleLogin = () => { /* Managed by onAuthStateChanged */ };
   const handleLogout = async () => { await signOut(auth); };
 
-  if (!user) return <LoginScreen onLogin={handleLogin} />;
+  if (!user) return <LoginScreen onLogin={() => {}} />;
 
   // Admin routing
-  if (window.location.pathname === '/admin') {
+  if (window.location.pathname === '/admin' && user.isAdmin) {
     return (
       <div className="min-h-screen bg-zinc-950 font-sans p-6 text-white max-w-5xl mx-auto">
         <button onClick={() => window.location.href = '/'} className="text-zinc-500 hover:text-white mb-6 font-bold text-xs uppercase tracking-widest">
@@ -346,22 +345,19 @@ export default function App() {
     );
   }
 
-  // My Networks routing (opens in new tab)
+  // My Networks routing
   if (window.location.pathname === '/my-networks') {
     return (
-      <div className="min-h-screen bg-zinc-950 font-sans text-white">
-        <MyNetworks
-          user={user}
-          balance={balance}
-          referralCode={referralCode}
-          referralCount={referralCount}
-        />
-      </div>
+      <MyNetworks
+        user={user}
+        balance={balance}
+        referralCode={referralCode}
+        referralCount={referralCount}
+      />
     );
   }
 
   return (
-    // ADDED: overflow-x-hidden to root to fix horizontal scroll bleed
     <div className="min-h-screen bg-zinc-950 text-white font-sans overflow-x-hidden w-full">
 
       {/* ── Success overlay ── */}
@@ -372,9 +368,7 @@ export default function App() {
             className="fixed inset-0 flex items-center justify-center z-[200] bg-black/70 backdrop-blur-sm"
           >
             <div className="bg-zinc-900 border border-emerald-500 rounded-3xl p-10 flex flex-col items-center gap-4 shadow-2xl">
-              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.4 }}>
-                <CheckCircle className="w-20 h-20 text-emerald-400" />
-              </motion.div>
+              <CheckCircle className="w-20 h-20 text-emerald-400" />
               <p className="text-2xl font-black text-emerald-400">Bet Placed!</p>
               <p className="text-zinc-400 text-sm">Good luck! 🏏</p>
             </div>
@@ -408,7 +402,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* ── Referral popup (shown after deposit popup X'd) ── */}
+      {/* ── Referral popup ── */}
       <AnimatePresence>
         {showReferralPopup && (
           <ReferralPopup
@@ -417,8 +411,6 @@ export default function App() {
           />
         )}
       </AnimatePresence>
-
-
 
       {/* ── Withdraw popup ── */}
       <AnimatePresence>
@@ -440,26 +432,16 @@ export default function App() {
       <div className="max-w-[1400px] mx-auto px-3 sm:px-5 py-5 flex gap-5 relative">
         <main className="flex-1 min-w-0 space-y-5">
 
-          {/* LIVE tab */}
           {activeTab === 'live' && (
             <>
               <LiveMatch match={match} selectedOdds={selectedOdds} onBet={addToBetSlip} />
-              {match.status === 'completed' ? (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center mt-5">
-                  <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-zinc-700">
-                    <CheckCircle className="w-8 h-8 text-zinc-500" />
-                  </div>
-                  <h3 className="text-xl font-black text-white mb-2">Match Completed</h3>
-                  <p className="text-zinc-500 text-sm">All betting markets for this match are now closed and settled.</p>
-                </div>
-              ) : (
+              {match.status !== 'completed' && (
                 <>
-                  {/* <TossBetting
-                    match={match}
-                    selectedOdds={selectedOdds}
-                    onBet={addToBetSlip}
-                    balance={balance}
-                  /> */}
+                  {isTossTime() && (
+                    <div className="mt-5">
+                      <TossBetting match={match} selectedOdds={selectedOdds} onBet={addToBetSlip} />
+                    </div>
+                  )}
                   <div className="mt-5">
                     <BettingMarkets selectedOdds={selectedOdds} onBet={addToBetSlip} status={match.status} />
                   </div>
@@ -468,132 +450,73 @@ export default function App() {
             </>
           )}
 
-          {/* UPCOMING tab */}
           {activeTab === 'upcoming' && (
             <div className="space-y-4">
-              <div className="mb-6">
-                <h1 className="text-4xl font-black tracking-tight mb-1">Upcoming<br />Matches</h1>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-zinc-400 text-sm">IPL 2026 • Place your bets now</p>
-                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 text-xs text-zinc-400 hover:bg-zinc-800 transition">
-                    <Clock className="w-3.5 h-3.5" /> REFRESH
-                  </button>
+              <h1 className="text-4xl font-black tracking-tight mb-4">Upcoming Matches</h1>
+              {match.status !== 'completed' && isTossTime() && (
+                <div className="mb-5">
+                  <TossBetting match={match} selectedOdds={selectedOdds} onBet={addToBetSlip} />
                 </div>
-              </div>
-
-              {/* Toss Betting card for upcoming match (only if live isn't completed) */}
-              {/* {match.status !== 'completed' && (
-                <TossBetting
-                  match={match}
-                  selectedOdds={selectedOdds}
-                  onBet={addToBetSlip}
-                  balance={balance}
-                />
-              )} */}
-
+              )}
               {UPCOMING.map((m, i) => (
-                <motion.div key={m.id}
-                  initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07 }}
-                  className="bg-zinc-900 border border-zinc-800/80 rounded-3xl p-5 relative overflow-hidden"
+                <motion.div key={m.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
+                  className="bg-zinc-900 border border-zinc-800/80 rounded-3xl p-5"
                 >
-                  {/* Time badge - moved from absolute to top-centered for better mobile safety */}
-                  {m.time !== 'LIVE' && (
-                    <div className="flex justify-center mb-4">
-                      <div className="bg-zinc-800 border border-orange-500/20 text-orange-400 text-[9px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                        <Clock className="w-3 h-3" /> {m.time}
-                      </div>
+                  <div className="flex justify-center mb-4 text-orange-400 text-xs font-bold gap-2">
+                    <Clock className="w-4 h-4" /> {m.time}
+                  </div>
+                  <div className="flex items-center justify-between mb-5 px-4 text-center">
+                    <div className="flex-1">
+                      <p className="text-3xl font-black">{m.team1}</p>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase">{m.team1Name}</p>
                     </div>
-                  )}
-
-                  {/* Teams header */}
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex flex-col items-center flex-1">
-                      <span className="text-3xl font-black tracking-tight">{m.team1}</span>
-                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">{m.team1Name}</span>
-                    </div>
-                    <div className="flex flex-col items-center shrink-0 w-14">
-                      <span className="text-emerald-400 font-black text-sm">VS</span>
-                    </div>
-                    <div className="flex flex-col items-center flex-1">
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <span className="text-2xl sm:text-3xl font-black tracking-tight">{m.team2}</span>
-                        {m.time === 'LIVE' && (
-                          <span className="bg-red-500/10 text-red-500 border border-red-500/30 text-[8px] sm:text-[9px] font-black px-1.5 sm:px-2 py-0.5 rounded-full animate-pulse shrink-0">LIVE</span>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">{m.team2Name}</span>
+                    <div className="text-emerald-500 font-black px-4">VS</div>
+                    <div className="flex-1">
+                      <p className="text-3xl font-black">{m.team2}</p>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase">{m.team2Name}</p>
                     </div>
                   </div>
-
-                  {/* Odds buttons */}
                   <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: m.team1, full: `${m.team1} Win`, odds: m.odds1 },
-                      { label: m.team2, full: `${m.team2} Win`, odds: m.odds2 },
-                    ].map(o => (
-                      <button key={o.label}
-                        onClick={() => addToBetSlip(`upcoming-${m.id}`, o.full, o.odds)}
-                        className={`flex flex-col items-center justify-center py-5 rounded-2xl border transition-all ${selectedOdds[`upcoming-${m.id}`] === o.full
-                          ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                          : 'bg-zinc-950 border-zinc-800 hover:border-emerald-500/50'
-                          }`}
-                      >
-                        <span className="text-[9px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2 whitespace-nowrap">{o.label}</span>
-                        <span className="text-3xl sm:text-4xl font-black text-emerald-400 leading-none">{o.odds}</span>
-                        <span className="text-[8px] sm:text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-2 text-center">Match Winner</span>
-                      </button>
-                    ))}
+                    <button onClick={() => addToBetSlip(`up-${m.id}`, `${m.team1} Win`, m.odds1)} className="bg-zinc-950 border border-zinc-800 hover:border-emerald-500/50 p-4 rounded-2xl">
+                      <p className="text-xs text-zinc-500 mb-1">{m.team1}</p>
+                      <p className="text-3xl font-black text-emerald-400">{m.odds1}</p>
+                    </button>
+                    <button onClick={() => addToBetSlip(`up-${m.id}`, `${m.team2} Win`, m.odds2)} className="bg-zinc-950 border border-zinc-800 hover:border-emerald-500/50 p-4 rounded-2xl">
+                      <p className="text-xs text-zinc-500 mb-1">{m.team2}</p>
+                      <p className="text-3xl font-black text-emerald-400">{m.odds2}</p>
+                    </button>
                   </div>
                 </motion.div>
               ))}
-
-              <div className="pb-8" />
             </div>
           )}
 
-          {/* MY BETS tab */}
           {activeTab === 'mybets' && (
             <div className="space-y-3">
               <h2 className="text-xl font-black mb-2">My Bets</h2>
               {placedBets.length === 0 ? (
                 <div className="text-center py-24 text-zinc-600">
                   <Target className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                  <p className="font-semibold">No bets placed yet</p>
-                  <p className="text-sm mt-1">Go to Live or Upcoming to place bets</p>
+                  <p className="font-semibold">No bets yet</p>
                 </div>
               ) : (
                 placedBets.map((b, i) => (
-                  <motion.div key={b.id + i}
-                    initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-center gap-3"
-                  >
-                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${b.status === 'won' ? 'bg-emerald-400' :
-                      b.status === 'lost' ? 'bg-red-500' : 'bg-yellow-500'}`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white truncate">{b.label}</p>
-                      <p className="text-[11px] text-zinc-500 capitalize">{b.market}</p>
+                  <div key={b.id + i} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-bold">{b.label}</p>
+                      <p className="text-[10px] text-zinc-500 uppercase">{b.market}</p>
                     </div>
-                    <div className="text-right shrink-0 mr-2">
+                    <div className="text-right">
                       <p className="text-sm font-black text-orange-400">@{b.odds}</p>
                       <p className="text-xs text-zinc-500">₹{b.stake}</p>
                     </div>
-                    <span className={`text-[10px] font-black px-2 py-1 rounded-full shrink-0 ${b.status === 'won' ? 'bg-emerald-500/20 text-emerald-400' :
-                      b.status === 'lost' ? 'bg-red-500/20 text-red-400' :
-                        'bg-yellow-500/20 text-yellow-400'}`}
-                    >
-                      {b.status.toUpperCase()}
-                    </span>
-                  </motion.div>
+                  </div>
                 ))
               )}
             </div>
           )}
         </main>
 
-        {/* ── Bet Slip ── */}
         <BetSlip
           betSlip={betSlip} totalStake={totalStake} totalReturn={totalReturn}
           balance={balance} isPlacing={isPlacing}
@@ -601,6 +524,29 @@ export default function App() {
           onPlace={placeBet} onDeposit={() => setShowDeposit(true)}
         />
       </div>
+
+      {/* ── FOOTER ── */}
+      <footer className="mt-20 border-t border-zinc-900 bg-zinc-950 pt-16 pb-20">
+        <div className="max-w-[1400px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center font-black text-black">MJ</div>
+              <span className="text-xl font-black">MJBET <span className="text-emerald-500">2026</span></span>
+            </div>
+            <p className="text-zinc-500 text-sm max-w-sm">Premium IPL 2026 betting destination. Fast, secure, and luxury-first.</p>
+          </div>
+          <div className="flex flex-col gap-4 items-center md:items-end">
+            <a href="https://www.instagram.com/_mjbooks?igsh=aDNqdml4MDZjOHlv" target="_blank" className="flex items-center gap-3 text-zinc-400 hover:text-emerald-400 transition bg-zinc-900 px-4 py-2 rounded-xl border border-zinc-800">
+              <Instagram className="w-5 h-5" />
+              <span className="text-sm font-bold">Instagram</span>
+            </a>
+            <a href="mailto:support@mjbet.com" className="flex items-center gap-3 text-zinc-400 hover:text-emerald-400 transition bg-zinc-900 px-4 py-2 rounded-xl border border-zinc-800">
+              <Mail className="w-5 h-5" />
+              <span className="text-sm font-bold">Contact Us</span>
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

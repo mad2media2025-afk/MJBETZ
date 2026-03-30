@@ -114,7 +114,26 @@ export default function AdminDashboard({ user }: Props) {
       // Deposit Bonus Logic
       if (action === 'approved') {
         const userRef = doc(db, 'users', deposit.uid);
-        await updateDoc(userRef, { balance: increment(deposit.amount * 2) }); // 100% bonus
+        
+        // Check if this is the user's FIRST approved deposit
+        const depositsQuery = query(
+          collection(db, 'deposits'),
+          where('uid', '==', deposit.uid),
+          where('status', '==', 'approved')
+        );
+        const existingApproved = await getDocs(depositsQuery);
+        
+        // If this is the FIRST approved one, existingApproved.docs.length will be 1 
+        // (because we just updated the current one to 'approved' above)
+        const isFirstDeposit = existingApproved.docs.length <= 1;
+
+        let creditAmount = deposit.amount;
+        // User clarified: First deposit (min 250) gets * 2. 
+        if (isFirstDeposit && deposit.amount >= 250) {
+          creditAmount = deposit.amount * 2;
+        }
+        
+        await updateDoc(userRef, { balance: increment(creditAmount) });
 
         // Verify pending referrals
         try {
@@ -131,16 +150,15 @@ export default function AdminDashboard({ user }: Props) {
             try { await updateDoc(doc(db, 'referrals', refDoc.id), { status: 'rewarded' }); } catch(err){}
           }
         } catch (e) {}
+
+        // Update local wallet map
+        setUsersMap(prev => ({
+          ...prev,
+          [deposit.uid]: { ...prev[deposit.uid], balance: (prev[deposit.uid]?.balance || 0) + creditAmount }
+        }));
       }
 
       setDeposits(prev => prev.map(d => d.id === deposit.id ? { ...d, status: action } : d));
-      // Update local wallet map
-      if (action === 'approved') {
-         setUsersMap(prev => ({
-           ...prev,
-           [deposit.uid]: { ...prev[deposit.uid], balance: (prev[deposit.uid]?.balance || 0) + (deposit.amount * 2) }
-         }));
-      }
     } catch (e: any) {
       alert(`Error processing transaction: ${e.message}`);
     } finally {

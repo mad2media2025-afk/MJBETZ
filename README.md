@@ -52,13 +52,29 @@ This document serves as the **comprehensive architectural blueprint** and knowle
 
 ### 4. Admin Approvals & Bonus Mechanics
 - **Admin Authorisation:** The `<AdminDashboard />` is protected by `isAdmin` claims in the Firestore document alongside hardcoded UID secondary checks.
-- **Deposit Bonus Processing:** Approving a pending deposit (`amount * X`) invokes:
-  1. Grants the user an automatic **200% Welcome Bonus**.
-  2. Resolves any `pending` referrals attached to the depositing user.
+- **Deposit Bonus Processing & 200% Welcome Offer:** 
+  - When an admin approves a deposit, the system queries the `deposits` collection for that `uid` where `status == 'approved'`.
+  - If `count <= 1`, a **200% Welcome Bonus** is automatically applied to the credit amount.
+  - This ensures only the *first* ever approved transaction triggers the massive bonus.
 - **Referral Payout Logic (Atomic):**
   - **Referrer:** Receives an instant `₹1,000` boost to their wallet and `referralCount` increments.
   - **Referee (Depositor):** Receives an extra `₹100` bonus for using a code.
   - The `status` on the referral document is flipped from `pending` -> `rewarded` so payouts won't duplicate on secondary deposits.
+
+### 5. Operational Scheduling (IST Logic)
+- **Automatic Toss Window:** The platform features a programmatic betting window for the match toss.
+- **Window:** 18:45 PM – 19:15 PM IST (Asia/Kolkata).
+- **Implementation:** `isTossTime()` helper in `App.tsx` calculates the current time offset to UTC +5.5 and dynamically renders the `<TossBetting />` market only during this 30-minute pre-match interval.
+
+### 6. Dynamic Odds & Market Jitter
+- **Odds Calculation:** Odds are derived from SportMonks win probabilities.
+- **Bookie Margin:** A defensive 6% margin is subtracted from raw probabilities before calculating decimal odds.
+- **Market Jitter:** To simulate real-time volatility, a random jitter of `±0.04` is applied to decimal odds every 15 seconds in `cricketApi.ts`.
+
+### 7. Match Result & Completion UI
+- **Completed Match State:** When `match.status === 'completed'`, the primary scoreboard shifts to a "Full-Time" summary.
+- **POTM Integration:** Displays the "Player of the Match" (POTM) and final result notes (e.g., "RR won by 8 wkts") fetched from the API or manual update in `LiveMatchHero`.
+- **Market Protection:** All betting markets are automatically disabled/hidden when the match status is `completed` to prevent post-event exploitation.
 
 ### 5. Financial Interfaces (UI/UX)
 - **Modals:** Built with Framer Motion `<motion.div>` for fluid entry/exit.

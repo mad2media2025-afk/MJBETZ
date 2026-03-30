@@ -18,15 +18,15 @@ const API_BASE = import.meta.env.DEV ? '/api/cricket' : (import.meta.env.VITE_CR
 const IPL_TEAMS: Record<string, { short: string; color: string }> = {
   'Royal Challengers Bengaluru': { short: 'RCB', color: '#EC1C24' },
   'Royal Challengers Bangalore': { short: 'RCB', color: '#EC1C24' },
-  'Chennai Super Kings': { short: 'CSK', color: '#FFCB05' },
-  'Mumbai Indians': { short: 'MI', color: '#004BA0' },
-  'Kolkata Knight Riders': { short: 'KKR', color: '#3A225D' },
-  'Sunrisers Hyderabad': { short: 'SRH', color: '#F26522' },
-  'Rajasthan Royals': { short: 'RR', color: '#E73895' },
-  'Delhi Capitals': { short: 'DC', color: '#0078BC' },
-  'Punjab Kings': { short: 'PBKS', color: '#ED1B24' },
-  'Gujarat Titans': { short: 'GT', color: '#1B2133' },
-  'Lucknow Super Giants': { short: 'LSG', color: '#A72056' },
+  'Chennai Super Kings':         { short: 'CSK', color: '#FFCB05' },
+  'Mumbai Indians':              { short: 'MI',  color: '#004BA0' },
+  'Kolkata Knight Riders':       { short: 'KKR', color: '#3A225D' },
+  'Sunrisers Hyderabad':         { short: 'SRH', color: '#F26522' },
+  'Rajasthan Royals':            { short: 'RR',  color: '#E73895' },
+  'Delhi Capitals':              { short: 'DC',  color: '#0078BC' },
+  'Punjab Kings':                { short: 'PBKS', color: '#ED1B24' },
+  'Gujarat Titans':              { short: 'GT',  color: '#1B2133' },
+  'Lucknow Super Giants':        { short: 'LSG', color: '#A72056' },
 };
 
 function getTeamMeta(name: string, code?: string) {
@@ -37,8 +37,32 @@ function getTeamMeta(name: string, code?: string) {
   };
 }
 
+/** 
+ * Converts Win Probability into Betting Odds with a Bookie Margin and Jitter 
+ */
+function calculateLiveOdds(winProb: number): number {
+  if (winProb <= 2) return 50.0;
+  if (winProb >= 98) return 1.05;
+  
+  // Base odds: 100 / winProb
+  // We apply a margin (overround) so that the house always wins slightly
+  const margin = 0.94; // 6% bookie margin
+  let odds = (100 / winProb) * margin;
+  
+  // Add a small random jitter (+/- 0.04) to simulate real-time market fluctuation
+  // as requested by the user ("odds randomly change according to scoreboard")
+  const jitter = (Math.random() * 0.08) - 0.04;
+  odds += jitter;
+
+  // Format to 2 decimal places and clamp between reasonable betting ranges
+  return parseFloat(Math.min(Math.max(odds, 1.01), 30).toFixed(2));
+}
+
 // ── Fallback Simulator ──────────────────────────────────────────────────────
 export const getSimulatedFallback = (prevMatch: LiveMatch): LiveMatch => {
+  const team1Prob = 10;
+  const team2Prob = 90;
+
   return {
     ...prevMatch,
     status: 'live',
@@ -55,8 +79,10 @@ export const getSimulatedFallback = (prevMatch: LiveMatch): LiveMatch => {
     target: 128,
     crr: 10.78,
     rrr: 2.16,
-    team1WinProb: 10,
-    team2WinProb: 90,
+    team1WinProb: team1Prob,
+    team2WinProb: team2Prob,
+    liveOdds1: calculateLiveOdds(team1Prob),
+    liveOdds2: calculateLiveOdds(team2Prob),
     currentInnings: 2,
     battingTeamId: 1, // RR
     matchNote: 'Rajasthan Royals need 26 runs in 62 balls',
@@ -415,6 +441,8 @@ function mapFixtureToLiveMatch(fixture: SMFixture, prevMatch: LiveMatch): LiveMa
     rrr,
     team1WinProb,
     team2WinProb,
+    liveOdds1: calculateLiveOdds(team1WinProb),
+    liveOdds2: calculateLiveOdds(team2WinProb),
     // 2nd innings data
     score2: innings2?.score,
     wickets2: innings2?.wickets,

@@ -43,11 +43,15 @@ export interface LiveMatch {
   wickets2?: number;
   overs2?: number;
   matchNote?: string;              // e.g. "CSK need 45 runs in 30 balls"
+  liveOdds1?: number;              // Dynamic odds for team 1
+  liveOdds2?: number;              // Dynamic odds for team 2
   team1Id?: number;
   team2Id?: number;
   allBatsmen?: { name: string; runs: number; balls: number; fours: number; sixes: number; strikeRate?: number; howOut?: string; isActive?: boolean }[];
   allBowlers?: { name: string; overs: string; wickets: number; economy: number; runsConceded?: number; maidens?: number; isActive?: boolean }[];
   isLiveFromApi?: boolean;         // true when data is from real API (not simulation)
+  result?: string;                 // Final result summary (e.g. "team wins by X wkts")
+  potm?: string;                   // Player of the Match
 }
 
 export interface BetSlipItem {
