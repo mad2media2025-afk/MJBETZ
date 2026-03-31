@@ -21,6 +21,7 @@ interface Props {
   balance: number;
   referralCode: string;
   referralCount: number;
+  referredFriendsDeposits?: Record<string, boolean>;
 }
 
 interface ReferredUser {
@@ -31,10 +32,11 @@ interface ReferredUser {
   timestamp: number;
 }
 
-export default function MyNetworks({ user, balance, referralCode, referralCount }: Props) {
+export default function MyNetworks({ user, balance, referralCode, referralCount, referredFriendsDeposits = {} }: Props) {
   const [referrals, setReferrals] = useState<ReferredUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [depositWarning, setDepositWarning] = useState(false);
 
   // Coupon entry state
   const [couponCode, setCouponCode] = useState('');
@@ -44,7 +46,9 @@ export default function MyNetworks({ user, balance, referralCode, referralCount 
   const [couponSuccess, setCouponSuccess] = useState(false);
 
   const shareUrl = `${window.location.origin}?ref=${referralCode}`;
-  const totalBonusEarned = referralCount * 1000;
+  
+  // Calculate referral balance: only count friends who have deposited ₹250+
+  const referralBalance = referrals.filter(r => referredFriendsDeposits[r.id]).length * 1000;
 
   // ── Check if user already has a referral code applied ───────────────────
   useEffect(() => {
@@ -90,6 +94,14 @@ export default function MyNetworks({ user, balance, referralCode, referralCount 
 
   // ── Copy referral link ───────────────────────────────────────────────────
   const handleCopyLink = () => {
+    // Check if any referred friends haven't deposited yet
+    const hasPendingFriends = referrals.some(r => !referredFriendsDeposits[r.id]);
+    
+    if (hasPendingFriends) {
+      setDepositWarning(true);
+      setTimeout(() => setDepositWarning(false), 3000);
+    }
+    
     navigator.clipboard.writeText(shareUrl).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2200);
@@ -228,6 +240,23 @@ export default function MyNetworks({ user, balance, referralCode, referralCount 
                 {copied ? 'Copied!' : 'Copy'}
               </button>
             </div>
+            
+            {/* Deposit warning message */}
+            <AnimatePresence>
+              {depositWarning && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="mt-3 bg-yellow-500/15 border border-yellow-500/30 rounded-xl p-3 flex items-start gap-2"
+                >
+                  <AlertCircle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-yellow-400 font-medium">
+                    Ask your friend to deposit ₹250 minimum to get ₹1000 cashback to you
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
 
@@ -249,11 +278,14 @@ export default function MyNetworks({ user, balance, referralCode, referralCount 
             },
             {
               label: 'Bonus Earned',
-              value: `₹${totalBonusEarned.toLocaleString()}`,
+              value: `₹${referralBalance.toLocaleString()}`,
               icon: <Trophy className="w-5 h-5" />,
               color: 'text-emerald-400',
               bg: 'bg-emerald-500/10',
               border: 'border-emerald-500/20',
+              sublabel: referrals.length > referrals.filter(r => referredFriendsDeposits[r.id]).length 
+                ? `(${referrals.filter(r => !referredFriendsDeposits[r.id]).length} waiting)` 
+                : '',
             },
           ].map((stat, i) => (
             <motion.div
@@ -267,7 +299,10 @@ export default function MyNetworks({ user, balance, referralCode, referralCount 
                 {stat.icon}
               </div>
               <p className="text-2xl font-black text-white">{stat.value}</p>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{stat.label}</p>
+              <div className="flex flex-col items-start gap-0.5">
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{stat.label}</p>
+                {stat.sublabel && <p className="text-[9px] text-yellow-600 font-bold">{stat.sublabel}</p>}
+              </div>
             </motion.div>
           ))}
         </motion.div>
@@ -419,13 +454,15 @@ export default function MyNetworks({ user, balance, referralCode, referralCount 
                       </p>
                     </div>
                   </div>
-                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 ${
-                    ref.status === 'rewarded'
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30'
-                  }`}>
-                    {ref.status === 'rewarded' ? '✓ JOINED' : 'PENDING'}
-                  </span>
+                  {referredFriendsDeposits[ref.id] ? (
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
+                      ✓ ₹1000 EARNED
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 whitespace-nowrap">
+                      ⏳ WAIT FOR DEPOSIT
+                    </span>
+                  )}
                 </motion.div>
               ))}
             </div>

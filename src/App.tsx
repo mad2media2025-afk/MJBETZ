@@ -36,17 +36,18 @@ const INIT_MATCH: LiveMatchType = {
   team1: 'Punjab Kings', team2: 'Gujarat Titans',
   team1Short: 'PBKS', team2Short: 'GT',
   team1Color: '#DC143C', team2Color: '#1E90FF',
-  score1: 83, wickets1: 2, overs: 9.3, 
+  score1: 100, wickets1: 2, overs: 11.1, 
   score2: 162, wickets2: 6, overs2: 20.0,
   totalOvers: 20, target: 163,
-  crr: 8.74, rrr: 7.62, 
+  crr: 8.96, rrr: 7.13, 
   team1WinProb: 30, team2WinProb: 70,
-  matchNote: 'GT 162-6 (20) • PBKS 83-2 (9.3) • Need 80 in 63 balls • Venue: Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh',
+  matchNote: 'GT 162-6 (20) • PBKS 100-2 (11.1) • Need 63 in 53 balls • Venue: Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh',
   lastOverRuns: ['1', '2', '1', '0', '4', '0'],
   batsmen: [
-    { name: 'Cooper Connolly', runs: 38, balls: 25, fours: 2, sixes: 3, strikeRate: 152.00, isStriker: true },
+    { name: 'Cooper Connolly', runs: 38, balls: 26, fours: 2, sixes: 3, strikeRate: 146.15, isStriker: true },
+    { name: 'Shreyas Iyer', runs: 17, balls: 9, fours: 0, sixes: 2, strikeRate: 188.89, isStriker: false },
   ],
-  bowler: { name: 'Rashid Khan', overs: '2.3', wickets: 1, economy: 6.00, runsConceded: 15 },
+  bowler: { name: 'Rashid Khan', overs: '3.1', wickets: 1, economy: 6.00, runsConceded: 19 },
   lastBall: '0',
   battingTeamId: 1,
   team1Id: 1,
@@ -107,6 +108,7 @@ export default function App() {
   const [referralCount, setReferralCount] = useState<number>(0);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
   const [hasDeposited, setHasDeposited] = useState(false);
+  const [referredFriendsDeposits, setReferredFriendsDeposits] = useState<Record<string, boolean>>({});
 
   // Match & UI
   const [match, setMatch] = useState<LiveMatchType>(INIT_MATCH);
@@ -217,6 +219,41 @@ export default function App() {
       }
     };
     checkDeposits();
+  }, [user?.uid]);
+
+  // 2d. Check which referred friends have deposited ₹250+
+  useEffect(() => {
+    if (!user?.uid) return;
+    const checkReferredFriendsDeposits = async () => {
+      try {
+        const { getDocs, query: q, where, collection: col } = await import('firebase/firestore');
+        const referralsRef = col(db, 'referrals');
+        const referralsQ = q(referralsRef, where('referrerUid', '==', user.uid));
+        const referralsSnap = await getDocs(referralsQ);
+        
+        const depositsData: Record<string, boolean> = {};
+        
+        for (const referralDoc of referralsSnap.docs) {
+          const refereeUid = referralDoc.data().refereeUid;
+          const depositsRef = col(db, 'deposits');
+          const depositsQ = q(depositsRef, where('uid', '==', refereeUid));
+          const depositsSnap = await getDocs(depositsQ);
+          
+          let hasDeposit = false;
+          depositsSnap.forEach(depDoc => {
+            const deposit = depDoc.data();
+            if (deposit.status === 'approved' && (deposit.amount || 0) >= 250) {
+              hasDeposit = true;
+            }
+          });
+          depositsData[refereeUid] = hasDeposit;
+        }
+        setReferredFriendsDeposits(depositsData);
+      } catch (e) {
+        console.error('Error checking referred friends deposits:', e);
+      }
+    };
+    checkReferredFriendsDeposits();
   }, [user?.uid]);
 
   // Auto-show deposit popup 
@@ -382,6 +419,7 @@ export default function App() {
         balance={balance}
         referralCode={referralCode}
         referralCount={referralCount}
+        referredFriendsDeposits={referredFriendsDeposits}
       />
     );
   }

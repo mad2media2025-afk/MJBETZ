@@ -60,48 +60,50 @@ function calculateLiveOdds(winProb: number): number {
 
 // ── Fallback Simulator ──────────────────────────────────────────────────────
 export const getSimulatedFallback = (prevMatch: LiveMatch): LiveMatch => {
-  const team1Prob = 10;
-  const team2Prob = 90;
+  const team1Prob = 30;
+  const team2Prob = 70;
 
   return {
     ...prevMatch,
     status: 'live',
-    team1: 'Chennai Super Kings',
-    team1Short: 'CSK',
-    team1Color: '#FFCB05',
-    score1: 127,
-    wickets1: 10,
-    overs: 19.4,
-    team2: 'Rajasthan Royals',
-    team2Short: 'RR',
-    team2Color: '#E73895',
+    team1: 'Punjab Kings',
+    team1Short: 'PBKS',
+    team1Color: '#ED1B24',
+    score1: 100,
+    wickets1: 2,
+    overs: 11.1,
+    team2: 'Gujarat Titans',
+    team2Short: 'GT',
+    team2Color: '#1B2133',
+    score2: 162,
+    wickets2: 6,
+    overs2: 20.0,
     totalOvers: 20,
-    target: 128,
-    crr: 10.78,
-    rrr: 2.16,
+    target: 163,
+    crr: 8.96,
+    rrr: 7.13,
     team1WinProb: team1Prob,
     team2WinProb: team2Prob,
     liveOdds1: calculateLiveOdds(team1Prob),
     liveOdds2: calculateLiveOdds(team2Prob),
     currentInnings: 2,
-    battingTeamId: 1, // RR
-    matchNote: 'Rajasthan Royals need 26 runs in 62 balls',
+    battingTeamId: 1, // PBKS
+    matchNote: 'Punjab Kings need 63 runs in 53 balls',
     batsmen: [
-      { name: 'Riyan Parag', runs: 6, balls: 5, fours: 1, sixes: 0, strikeRate: 120.00, isStriker: true },
-      { name: 'Yashasvi Jaiswal', runs: 25, balls: 28, fours: 3, sixes: 0, strikeRate: 89.29, isStriker: false }
+      { name: 'Cooper Connolly', runs: 38, balls: 26, fours: 2, sixes: 3, strikeRate: 146.15, isStriker: true },
+      { name: 'Shreyas Iyer', runs: 17, balls: 9, fours: 0, sixes: 2, strikeRate: 188.89, isStriker: false }
     ],
-    bowler: { name: 'Khaleel Ahmed', overs: '2.5', wickets: 0, economy: 6.00, runsConceded: 17 },
+    bowler: { name: 'Rashid Khan', overs: '3.1', wickets: 1, economy: 6.00, runsConceded: 19 },
     allBatsmen: [
-      { name: 'Yashasvi Jaiswal', runs: 25, balls: 28, fours: 3, sixes: 0, strikeRate: 89.29, isActive: true },
-      { name: 'Riyan Parag', runs: 6, balls: 5, fours: 1, sixes: 0, strikeRate: 120.00, isActive: true },
-      { name: 'Sanju Samson', runs: 42, balls: 22, fours: 4, sixes: 2, strikeRate: 190.9, isActive: false, howOut: 'lbw b Kamboj' }
+      { name: 'Cooper Connolly', runs: 38, balls: 26, fours: 2, sixes: 3, strikeRate: 146.15, isActive: true },
+      { name: 'Shreyas Iyer', runs: 17, balls: 9, fours: 0, sixes: 2, strikeRate: 188.89, isActive: true }
     ],
     allBowlers: [
-      { name: 'Khaleel Ahmed', overs: '2.5', wickets: 0, economy: 6.00, runsConceded: 17, maidens: 0, isActive: true },
-      { name: 'Anshul Kamboj', overs: '3.0', wickets: 2, economy: 9.00, runsConceded: 27, maidens: 0, isActive: false }
+      { name: 'Rashid Khan', overs: '3.1', wickets: 1, economy: 6.00, runsConceded: 19, maidens: 0, isActive: true },
+      { name: 'Ashok Sharma', overs: '2.0', wickets: 0, economy: 13.00, runsConceded: 26, maidens: 0, isActive: false }
     ],
-    lastOverRuns: ['1', '0', '4', '1', '0', '.', '1'],
-    lastBall: '1',
+    lastOverRuns: ['1', '2', '1', '0', '4', '0'],
+    lastBall: '0',
     isLiveFromApi: false
   };
 };
