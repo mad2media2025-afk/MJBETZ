@@ -9,6 +9,8 @@ import { Gift, CheckCircle, X, ArrowRight } from 'lucide-react';
 import { collection, query, where, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
+const MIN_DEPOSIT_FOR_REFERRAL = 250;
+
 interface Props {
   uid: string;
   onClose: () => void;
@@ -44,6 +46,25 @@ export default function ReferralCodeEntry({ uid, onClose }: Props) {
 
       if (referrerUid === uid) {
         setError("You can't use your own referral code!");
+        return;
+      }
+
+      // Check if the REFERRER has deposited minimum ₹250
+      const referrerDepositsRef = collection(db, 'deposits');
+      const referrerDepositsQuery = query(referrerDepositsRef, where('uid', '==', referrerUid));
+      const referrerDepositsSnap = await getDocs(referrerDepositsQuery);
+      
+      let referrerTotalDeposited = 0;
+      referrerDepositsSnap.forEach(doc => {
+        const deposit = doc.data();
+        if (deposit.status === 'approved') {
+          referrerTotalDeposited += deposit.amount || 0;
+        }
+      });
+
+      if (referrerTotalDeposited < MIN_DEPOSIT_FOR_REFERRAL) {
+        setError('This referral code is not valid. The referrer must have deposited ₹250 first.');
+        setIsSubmitting(false);
         return;
       }
 

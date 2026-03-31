@@ -276,11 +276,15 @@ export const fetchLiveMatchData = async (prevMatch: LiveMatch): Promise<LiveMatc
       return getSimulatedFallback(prevMatch);
     }
 
-    // Try to find a live match (prefer "in progress" over "not started")
+    // Only show PBKS vs GT match
     const fixtures = json.data as SMFixture[];
-    const liveFixture = fixtures.find(f =>
-      f.status && !['ns', 'not started', 'finished', 'aban.', 'abandoned'].includes(f.status.toLowerCase())
-    ) || fixtures[0];
+    const liveFixture = fixtures.find(f => {
+      const team1 = f.localteam?.name || '';
+      const team2 = f.visitorteam?.name || '';
+      const isPBKSGT = (team1.includes('Punjab') && team2.includes('Gujarat')) || 
+                       (team2.includes('Punjab') && team1.includes('Gujarat'));
+      return isPBKSGT && f.status && !['ns', 'not started', 'finished', 'aban.', 'abandoned'].includes(f.status.toLowerCase());
+    });
 
     if (!liveFixture) return getSimulatedFallback(prevMatch);
 

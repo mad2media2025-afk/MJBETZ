@@ -36,20 +36,19 @@ const INIT_MATCH: LiveMatchType = {
   team1: 'Punjab Kings', team2: 'Gujarat Titans',
   team1Short: 'PBKS', team2Short: 'GT',
   team1Color: '#DC143C', team2Color: '#1E90FF',
-  score1: 0, wickets1: 0, overs: 0.0, 
-  score2: 36, wickets2: 0, overs2: 3.1,
-  totalOvers: 20, target: 0,
-  crr: 11.37, rrr: 0, 
-  team1WinProb: 35, team2WinProb: 65,
-  matchNote: 'GT 36-0 (3.1) • PBKS opt to bowl • Venue: Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh • Live from today 7:30 PM',
-  lastOverRuns: ['1', '0', '4', '2', '1', '4', '0'],
+  score1: 83, wickets1: 2, overs: 9.3, 
+  score2: 162, wickets2: 6, overs2: 20.0,
+  totalOvers: 20, target: 163,
+  crr: 8.74, rrr: 7.62, 
+  team1WinProb: 30, team2WinProb: 70,
+  matchNote: 'GT 162-6 (20) • PBKS 83-2 (9.3) • Need 80 in 63 balls • Venue: Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh',
+  lastOverRuns: ['1', '2', '1', '0', '4', '0'],
   batsmen: [
-    { name: 'Shubman Gill', runs: 21, balls: 10, fours: 4, sixes: 0, strikeRate: 210.00, isStriker: true },
-    { name: 'Sai Sudharsan', runs: 13, balls: 9, fours: 2, sixes: 0, strikeRate: 144.44, isStriker: false },
+    { name: 'Cooper Connolly', runs: 38, balls: 25, fours: 2, sixes: 3, strikeRate: 152.00, isStriker: true },
   ],
-  bowler: { name: 'Arshdeep Singh', overs: '2.0', wickets: 0, economy: 10.50, runsConceded: 21 },
-  lastBall: '1',
-  battingTeamId: 2,
+  bowler: { name: 'Rashid Khan', overs: '2.3', wickets: 1, economy: 6.00, runsConceded: 15 },
+  lastBall: '0',
+  battingTeamId: 1,
   team1Id: 1,
   team2Id: 2,
   currentInnings: 2,
@@ -57,7 +56,7 @@ const INIT_MATCH: LiveMatchType = {
 };
 
 const UPCOMING = [
-  { id: 'm4', team1: 'PBKS', team1Name: 'Kings', team2: 'GT', team2Name: 'Titans', time: 'Mar 31, 7:30 PM', odds1: 2.20, odds2: 1.65 },
+  { id: 'm4', team1: 'PBKS', team1Name: 'Kings', team2: 'GT', team2Name: 'Titans', time: 'Mar 31, 7:30 PM', odds1: 5.10, odds2: 1.50 },
   { id: 'm5', team1: 'LSG', team1Name: 'Super Giants', team2: 'DC', team2Name: 'Capitals', time: 'Apr 01, 7:30 PM', odds1: 1.85, odds2: 2.00 },
   { id: 'm6', team1: 'RCB', team1Name: 'Bengaluru', team2: 'MI', team2Name: 'Indians', time: 'Apr 02, 7:30 PM', odds1: 1.95, odds2: 1.85 },
 ];
@@ -107,6 +106,7 @@ export default function App() {
   const [referralCode, setReferralCode] = useState<string>('');
   const [referralCount, setReferralCount] = useState<number>(0);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
+  const [hasDeposited, setHasDeposited] = useState(false);
 
   // Match & UI
   const [match, setMatch] = useState<LiveMatchType>(INIT_MATCH);
@@ -192,6 +192,31 @@ export default function App() {
       setPlacedBets(bets);
     });
     return () => unsub();
+  }, [user?.uid]);
+
+  // 2c. Check if user has made any deposits (for referral eligibility)
+  useEffect(() => {
+    if (!user?.uid) return;
+    const checkDeposits = async () => {
+      try {
+        const { getDocs, query: q, where, collection: col } = await import('firebase/firestore');
+        const depositsRef = col(db, 'deposits');
+        const depositsQ = q(depositsRef, where('uid', '==', user.uid));
+        const snap = await getDocs(depositsQ);
+        
+        let hasApprovedDeposit = false;
+        snap.forEach(doc => {
+          const deposit = doc.data();
+          if (deposit.status === 'approved' && (deposit.amount || 0) >= 250) {
+            hasApprovedDeposit = true;
+          }
+        });
+        setHasDeposited(hasApprovedDeposit);
+      } catch (e) {
+        console.error('Error checking deposits:', e);
+      }
+    };
+    checkDeposits();
   }, [user?.uid]);
 
   // Auto-show deposit popup 
@@ -409,7 +434,7 @@ export default function App() {
 
       {/* ── Referral popup ── */}
       <AnimatePresence>
-        {showReferralPopup && (
+        {showReferralPopup && hasDeposited && (
           <ReferralPopup
             referralCode={referralCode}
             onClose={() => setShowReferralPopup(false)}
