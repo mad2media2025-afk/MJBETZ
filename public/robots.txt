@@ -1,0 +1,29 @@
+# Robots.txt for MJBET - IPL Betting Platform
+# Allow search engines to crawl public content only
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/private/
+Disallow: /payment-confirmation/
+Disallow: /user-profile/
+Disallow: /account/
+Disallow: /.*\.json$
+Disallow: /*.pdf$
+Disallow: /node_modules/
+Disallow: /.env
+Disallow: /.git
+
+# Allow specific crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Crawl delay (Bing)
+User-agent: Bingbot
+Crawl-delay: 0
+
+# Sitemap location
+Sitemap: https://mjbet.vercel.app/sitemap.xml

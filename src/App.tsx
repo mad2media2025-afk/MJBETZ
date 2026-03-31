@@ -23,6 +23,7 @@ import AdminDashboard from './components/AdminDashboard';
 import TossBetting from './components/TossBetting';
 import ReferralPopup from './components/ReferralPopup';
 import MyNetworks from './components/MyNetworks';
+import { SEOSchema } from './components/SEOSchema';
 import { fetchLiveMatchData } from './lib/cricketApi';
 import { settlePendingBets } from './lib/settleBets';
 import type { User, LiveMatch as LiveMatchType, BetSlipItem, PlacedBet } from './types';
@@ -359,6 +360,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white font-sans overflow-x-hidden w-full">
+      <SEOSchema />
 
       {/* ── Success overlay ── */}
       <AnimatePresence>
