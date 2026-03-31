@@ -38,6 +38,7 @@ const AUTH_ERRORS: Record<string, string> = {
   'auth/invalid-credential': 'Incorrect email or password. Please try again.',
   'auth/too-many-requests': 'Too many attempts. Please try again later.',
   'auth/network-request-failed': 'Network error. Please check your connection.',
+  'auth/operation-not-allowed': 'Authentication method not enabled. Please enable "Email/Password" in your Firebase Console (Authentication > Sign-in method).',
 };
 
 export default function LoginScreen({ onLogin }: Props) {
