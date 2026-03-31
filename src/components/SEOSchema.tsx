@@ -103,9 +103,9 @@ export const SEOSchema = () => {
     }
 
     // Add Organization Schema
-    let orgScript = document.getElementById('org-schema')
+    let orgScript = document.getElementById('org-schema') as HTMLScriptElement
     if (!orgScript) {
-      orgScript = document.createElement('script')
+      orgScript = document.createElement('script') as HTMLScriptElement
       orgScript.id = 'org-schema'
       orgScript.type = 'application/ld+json'
       orgScript.innerHTML = JSON.stringify(organizationSchema)
@@ -113,9 +113,9 @@ export const SEOSchema = () => {
     }
 
     // Add LocalBusiness Schema
-    let localScript = document.getElementById('local-schema')
+    let localScript = document.getElementById('local-schema') as HTMLScriptElement
     if (!localScript) {
-      localScript = document.createElement('script')
+      localScript = document.createElement('script') as HTMLScriptElement
       localScript.id = 'local-schema'
       localScript.type = 'application/ld+json'
       localScript.innerHTML = JSON.stringify(localBusinessSchema)
@@ -123,9 +123,9 @@ export const SEOSchema = () => {
     }
 
     // Add Breadcrumb Schema
-    let breadcrumbScript = document.getElementById('breadcrumb-schema')
+    let breadcrumbScript = document.getElementById('breadcrumb-schema') as HTMLScriptElement
     if (!breadcrumbScript) {
-      breadcrumbScript = document.createElement('script')
+      breadcrumbScript = document.createElement('script') as HTMLScriptElement
       breadcrumbScript.id = 'breadcrumb-schema'
       breadcrumbScript.type = 'application/ld+json'
       breadcrumbScript.innerHTML = JSON.stringify(breadcrumbSchema)
@@ -133,9 +133,9 @@ export const SEOSchema = () => {
     }
 
     // Add FAQ Schema
-    let faqScript = document.getElementById('faq-schema')
+    let faqScript = document.getElementById('faq-schema') as HTMLScriptElement
     if (!faqScript) {
-      faqScript = document.createElement('script')
+      faqScript = document.createElement('script') as HTMLScriptElement
       faqScript.id = 'faq-schema'
       faqScript.type = 'application/ld+json'
       faqScript.innerHTML = JSON.stringify(faqSchema)
