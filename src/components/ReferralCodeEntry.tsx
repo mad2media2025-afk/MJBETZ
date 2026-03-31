@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, CheckCircle, X, ArrowRight } from 'lucide-react';
-import { collection, query, where, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, addDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 const MIN_DEPOSIT_FOR_REFERRAL = 250;
@@ -31,18 +31,16 @@ export default function ReferralCodeEntry({ uid, onClose }: Props) {
     setIsSubmitting(true);
     setError('');
     try {
-      // Find the user who owns this referral code
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('referralCode', '==', trimmedCode));
-      const snap = await getDocs(q);
-
-      if (snap.empty) {
+      // Find the user who owns this referral code using the referralCodes index
+      const refCodeDoc = await getDoc(doc(db, 'referralCodes', trimmedCode));
+      
+      if (!refCodeDoc.exists()) {
         setError('Invalid referral code. Please check and try again.');
         return;
       }
 
-      const referrerDoc = snap.docs[0];
-      const referrerUid = referrerDoc.id;
+      const refCodeData = refCodeDoc.data();
+      const referrerUid = refCodeData?.uid;
 
       if (referrerUid === uid) {
         setError("You can't use your own referral code!");
@@ -63,21 +61,27 @@ export default function ReferralCodeEntry({ uid, onClose }: Props) {
       });
 
       if (referrerTotalDeposited < MIN_DEPOSIT_FOR_REFERRAL) {
-        setError('This referral code is not valid. The referrer must have deposited ₹250 first.');
+        setError(`The referrer must have deposited ₹${MIN_DEPOSIT_FOR_REFERRAL} first. Current: ₹${referrerTotalDeposited}`);
         setIsSubmitting(false);
         return;
       }
 
-      // Record the referral relationship in the current user's document
-      await updateDoc(doc(db, 'users', uid), {
-        referredBy: referrerUid,
-        referredByCode: trimmedCode,
-      });
+      // Check if code is already used by this user
+      const existingRef = query(collection(db, 'referrals'), 
+        where('refereeUid', '==', uid),
+        where('referralCode', '==', trimmedCode)
+      );
+      const existing = await getDocs(existingRef);
+      if (!existing.empty) {
+        setError('You have already used this referral code.');
+        return;
+      }
 
       // Create a pending referral document — bonus fires when this user deposits ₹250+
       await addDoc(collection(db, 'referrals'), {
         referrerUid,
         refereeUid: uid,
+        referralCode: trimmedCode,
         status: 'pending', // → 'rewarded' once referee deposits ₹250+
         timestamp: Date.now(),
       });
@@ -85,8 +89,8 @@ export default function ReferralCodeEntry({ uid, onClose }: Props) {
       setSuccess(true);
       setTimeout(onClose, 3000);
     } catch (e) {
-      console.error(e);
-      setError('Something went wrong. Please try again.');
+      console.error('ReferralCodeEntry error:', e);
+      setError(`Error: ${e instanceof Error ? e.message : 'Something went wrong. Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }

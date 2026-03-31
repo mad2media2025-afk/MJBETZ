@@ -174,6 +174,14 @@ export default function LoginScreen({ onLogin }: Props) {
         ...(referrerUid ? { referredBy: referrerUid, referredByCode: trimmedRef } : {}),
       });
 
+      // Create referralCodes lookup index for faster retrieval
+      await setDoc(doc(db, 'referralCodes', referralCode), {
+        uid: firebaseUser.uid,
+        email: suEmail.trim().toLowerCase(),
+        name: suName.trim(),
+        createdAt: new Date().toISOString(),
+      });
+
       // 5. If referral is valid — credit referrer & record referral
       if (referrerUid) {
         try {
