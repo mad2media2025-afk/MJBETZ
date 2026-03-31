@@ -32,17 +32,17 @@ import type { User, LiveMatch as LiveMatchType, BetSlipItem, PlacedBet } from '.
 
 const INIT_MATCH: LiveMatchType = {
   status: 'live',
-  startTime: '2026-03-31T14:00:00Z',
+  startTime: '2026-03-31T19:30:00Z',
   team1: 'Punjab Kings', team2: 'Gujarat Titans',
   team1Short: 'PBKS', team2Short: 'GT',
   team1Color: '#DC143C', team2Color: '#1E90FF',
-  score1: 0, wickets1: 0, overs: 0, 
-  score2: 36, wickets2: 0, overs2: 3.1,
-  totalOvers: 20, target: 36,
+  score1: 0, wickets1: 0, overs: '0.0', 
+  score2: 36, wickets2: 0, overs2: '3.1',
+  totalOvers: 20, target: 0,
   crr: 11.37, rrr: 0, 
-  team1WinProb: 45, team2WinProb: 55,
-  matchNote: 'GT 36-0 (3.1) • PBKS opt to bowl • Venue: Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh',
-  lastOverRuns: ['1', '0', '4', '2'],
+  team1WinProb: 35, team2WinProb: 65,
+  matchNote: 'GT 36-0 (3.1) • PBKS opt to bowl • Venue: Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh • Live from today 7:30 PM',
+  lastOverRuns: ['1', '0', '4', '2', '1', '4', '0'],
   batsmen: [
     { name: 'Shubman Gill', runs: 21, balls: 10, fours: 4, sixes: 0, strikeRate: 210.00, isStriker: true },
     { name: 'Sai Sudharsan', runs: 13, balls: 9, fours: 2, sixes: 0, strikeRate: 144.44, isStriker: false },
@@ -52,6 +52,8 @@ const INIT_MATCH: LiveMatchType = {
   battingTeamId: 2,
   team1Id: 1,
   team2Id: 2,
+  currentInnings: 2,
+  isLiveFromApi: false,
 };
 
 const UPCOMING = [
