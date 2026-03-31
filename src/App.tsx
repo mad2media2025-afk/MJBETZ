@@ -465,8 +465,14 @@ export default function App() {
               )}
               {UPCOMING.map((m, i) => (
                 <motion.div key={m.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                  className="bg-zinc-900 border border-zinc-800/80 rounded-3xl p-5"
+                  className="bg-zinc-900 border border-zinc-800/80 rounded-3xl p-5 relative"
                 >
+                  {i === 0 && (
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 text-red-500 text-[10px] font-black px-2.5 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                      LIVE
+                    </div>
+                  )}
                   <div className="flex justify-center mb-4 text-orange-400 text-xs font-bold gap-2">
                     <Clock className="w-4 h-4" /> {m.time}
                   </div>
